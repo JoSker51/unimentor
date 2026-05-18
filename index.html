@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UniMentor — Plataforma de Mentorías Universitarias</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          sap: { DEFAULT: '#0A6ED1', dark: '#085CAD', light: '#E8F1FC', soft: '#F2F7FD' },
+          ink: '#1D2D3E', muted: '#5B6B7B', line: '#E4E9EF', bg: '#F4F6F8'
+        },
+        fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        boxShadow: {
+          card: '0 1px 2px rgba(16,30,54,.04), 0 8px 24px rgba(16,30,54,.06)',
+          float: '0 12px 40px rgba(10,110,209,.18)'
+        }
+      }
+    }
+  }
+</script>
+<style>
+  *{scrollbar-width:thin;scrollbar-color:#cdd5df transparent}
+  *::-webkit-scrollbar{width:8px;height:8px}
+  *::-webkit-scrollbar-thumb{background:#cdd5df;border-radius:9px}
+  body{font-family:'Inter',sans-serif;background:#F4F6F8}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+  @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(10,110,209,.35)}70%{box-shadow:0 0 0 12px rgba(10,110,209,0)}100%{box-shadow:0 0 0 0 rgba(10,110,209,0)}}
+  @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  .anim-fade{animation:fadeUp .45s cubic-bezier(.2,.7,.3,1) both}
+  .anim-pop{animation:pop .35s cubic-bezier(.2,.7,.3,1) both}
+  .anim-slide{animation:slideIn .4s ease both}
+  .ring-live{animation:pulseRing 2s infinite}
+  .tx{transition:all .2s ease}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, createContext, useContext } = React;
+
+/* ----------------------------- Icons ----------------------------- */
+const I = ({d, s=20, c="currentColor", f="none", w=1.8}) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill={f} stroke={c} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+);
+const Ic = {
+  grid:<I d={<><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></>}/>,
+  plus:<I d={<><path d="M12 5v14M5 12h14"/></>}/>,
+  spark:<I d={<><path d="M12 2v6m0 8v6M4.9 4.9l4.2 4.2m5.8 5.8l4.2 4.2M2 12h6m8 0h6M4.9 19.1l4.2-4.2m5.8-5.8l4.2-4.2"/></>}/>,
+  chat:<I d={<><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></>}/>,
+  user:<I d={<><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></>}/>,
+  trophy:<I d={<><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></>}/>,
+  clock:<I d={<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>}/>,
+  cog:<I d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></>}/>,
+  inbox:<I d={<><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/></>}/>,
+  bell:<I d={<><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></>}/>,
+  star:<I d={<><path d="M12 2l3 6.5 7 .9-5 4.7 1.3 7L12 17.8 5.7 21l1.3-7-5-4.7 7-.9z"/></>} f="currentColor" w="0"/>,
+  send:<I d={<><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></>}/>,
+  paperclip:<I d={<><path d="M21.4 11.05l-9.2 9.2a5 5 0 0 1-7.07-7.07l9.2-9.2a3.33 3.33 0 0 1 4.71 4.71l-9.2 9.2a1.67 1.67 0 0 1-2.36-2.36l8.5-8.49"/></>}/>,
+  screen:<I d={<><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></>}/>,
+  phoneOff:<I d={<><path d="M10.7 13.3a10 10 0 0 0 4 4M22 2L2 22M16.9 19.9A14 14 0 0 1 4.1 7.1M5 3h3l2 5-2.5 1.5"/></>}/>,
+  arrow:<I d={<><path d="M5 12h14M13 6l6 6-6 6"/></>}/>,
+  back:<I d={<><path d="M19 12H5M11 18l-6-6 6-6"/></>}/>,
+  check:<I d={<><path d="M20 6L9 17l-5-5"/></>}/>,
+  x:<I d={<><path d="M18 6L6 18M6 6l12 12"/></>}/>,
+  bolt:<I d={<><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></>} f="currentColor" w="0"/>,
+  book:<I d={<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>}/>,
+  gift:<I d={<><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9M12 8C12 5 9.5 3 8 4.5S8 8 12 8zM12 8c0-3 2.5-5 4-3.5S16 8 12 8z"/></>}/>,
+  logout:<I d={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></>}/>,
+  trend:<I d={<><path d="M3 17l6-6 4 4 8-8M21 7h-6"/></>}/>,
+  cal:<I d={<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></>}/>,
+  search:<I d={<><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></>}/>,
+  swap:<I d={<><path d="M3 7h13l-3-3M21 17H8l3 3"/></>}/>,
+  fire:<I d={<><path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 1-3s-3 2-3 6a6 6 0 0 0 12 0c0-6-6-11-6-11z"/></>}/>,
+  award:<I d={<><circle cx="12" cy="9" r="6"/><path d="M9 14.5L8 22l4-2 4 2-1-7.5"/></>}/>,
+};
+
+/* ----------------------------- Mock Data ----------------------------- */
+const AV = (seed, bg='0A6ED1') => `https://i.pravatar.cc/160?img=${seed}`;
+const MENTORS = [
+  { id:1, name:'Valentina Rojas', sem:'8º Semestre', career:'Ing. de Sistemas', img:AV(47), rating:4.9, reviews:128, resp:'2 min', online:true, subjects:['Cálculo Diferencial','Álgebra Lineal','Física I'], hours:142, bio:'Monitora oficial de Cálculo. Me apasiona explicar con ejemplos del mundo real y paso a paso.', badges:['Top Mentor','100h Servicio','Racha 30 días'] },
+  { id:2, name:'Sebastián Marín', sem:'9º Semestre', career:'Ing. Electrónica', img:AV(12), rating:4.8, reviews:96, resp:'5 min', online:true, subjects:['Circuitos','Física II','Programación C++'], hours:118, bio:'Ayudo con laboratorios y proyectos. Explico desde lo básico sin asumir nada.', badges:['Mentor Verificado','Bono académico'] },
+  { id:3, name:'Camila Duarte', sem:'7º Semestre', career:'Estadística', img:AV(45), rating:5.0, reviews:74, resp:'1 min', online:true, subjects:['Estadística','Probabilidad','Python'], hours:89, bio:'Reduzcamos el miedo a la estadística juntas. Práctica guiada y mucha paciencia.', badges:['Rating Perfecto','Racha 15 días'] },
+  { id:4, name:'Andrés Beltrán', sem:'10º Semestre', career:'Ing. Industrial', img:AV(33), rating:4.7, reviews:152, resp:'8 min', online:false, subjects:['Investigación de Operaciones','Cálculo Integral'], hours:201, bio:'Más de 200 horas acompañando primíparos. Enfoque en entender, no memorizar.', badges:['Leyenda 200h','Top Mentor'] },
+  { id:5, name:'Mariana López', sem:'8º Semestre', career:'Matemáticas', img:AV(20), rating:4.9, reviews:110, resp:'3 min', online:true, subjects:['Álgebra Lineal','Ecuaciones Diferenciales'], hours:134, bio:'Las matemáticas se disfrutan cuando se entienden. Vamos a tu ritmo.', badges:['Mentor Verificado','Racha 20 días'] },
+];
+const REQUESTS = [
+  { id:1, name:'Juan Pérez', sem:'2º Sem', subject:'Cálculo Diferencial', topic:'Límites y continuidad', urgency:'Alta', ago:'hace 2 min', img:AV(60), desc:'No entiendo cómo resolver límites indeterminados 0/0 para el parcial de mañana.' },
+  { id:2, name:'Laura Gómez', sem:'1º Sem', subject:'Física I', topic:'Cinemática', urgency:'Media', ago:'hace 9 min', img:AV(31), desc:'Necesito ayuda con problemas de movimiento parabólico, tengo taller el viernes.' },
+  { id:3, name:'Diego Torres', sem:'3º Sem', subject:'Álgebra Lineal', topic:'Matrices y determinantes', urgency:'Baja', ago:'hace 21 min', img:AV(15), desc:'Quiero reforzar operaciones con matrices antes del próximo quiz.' },
+];
+const SESSIONS = [
+  { id:1, with:'Juan Pérez', subject:'Cálculo Diferencial', date:'17 May 2026', dur:'48 min', rating:5, status:'Completada' },
+  { id:2, with:'Laura Gómez', subject:'Física I', date:'15 May 2026', dur:'1h 12min', rating:5, status:'Completada' },
+  { id:3, with:'Sofía Ríos', subject:'Álgebra Lineal', date:'12 May 2026', dur:'35 min', rating:4, status:'Completada' },
+  { id:4, with:'Pablo Mesa', subject:'Programación C++', date:'09 May 2026', dur:'55 min', rating:5, status:'Completada' },
+];
+const REWARDS = [
+  { id:1, t:'Certificado de Servicio Social', d:'40 horas validadas por Bienestar', need:40, ic:Ic.award, done:true },
+  { id:2, t:'Bono Cafetería $50.000', d:'Canjeable en puntos del campus', need:60, ic:Ic.gift, done:true },
+  { id:3, t:'Acceso VIP Biblioteca', d:'Salas de estudio premium', need:80, ic:Ic.book, done:false },
+  { id:4, t:'Beca parcial matrícula', d:'5% descuento próximo semestre', need:150, ic:Ic.trophy, done:false },
+];
+
+/* ----------------------------- UI Primitives ----------------------------- */
+const cx = (...a) => a.filter(Boolean).join(' ');
+const Card = ({className, children, ...p}) => <div {...p} className={cx('bg-white rounded-2xl border border-line shadow-card', className)}>{children}</div>;
+const Btn = ({variant='primary', className, children, ...p}) => {
+  const v = {
+    primary:'bg-sap text-white hover:bg-sap-dark shadow-sm',
+    soft:'bg-sap-light text-sap hover:bg-sap/15',
+    ghost:'bg-transparent text-muted hover:bg-bg hover:text-ink',
+    outline:'border border-line text-ink hover:border-sap hover:text-sap bg-white',
+    danger:'bg-red-50 text-red-600 hover:bg-red-100',
+    success:'bg-emerald-500 text-white hover:bg-emerald-600',
+  }[variant];
+  return <button {...p} className={cx('tx px-4 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 active:scale-[.97]', v, className)}>{children}</button>;
+};
+const Pill = ({color='sap', children}) => {
+  const c = { sap:'bg-sap-light text-sap', green:'bg-emerald-50 text-emerald-600', amber:'bg-amber-50 text-amber-600', red:'bg-red-50 text-red-600', gray:'bg-bg text-muted' }[color];
+  return <span className={cx('px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide', c)}>{children}</span>;
+};
+const Stars = ({n, s=14}) => (
+  <span className="inline-flex items-center gap-.5 text-amber-400">
+    {[1,2,3,4,5].map(i => <span key={i} className={i<=Math.round(n)?'opacity-100':'opacity-25'}>{React.cloneElement(Ic.star,{s})}</span>)}
+  </span>
+);
+const Avatar = ({src, size=40, online}) => (
+  <span className="relative inline-block shrink-0" style={{width:size,height:size}}>
+    <img src={src} className="rounded-full object-cover w-full h-full ring-2 ring-white shadow-sm" alt=""/>
+    {online!==undefined && <span className={cx('absolute bottom-0 right-0 w-3 h-3 rounded-full ring-2 ring-white', online?'bg-emerald-500':'bg-gray-300')}/>}
+  </span>
+);
+const Progress = ({v, max=100, color='bg-sap'}) => (
+  <div className="h-2.5 rounded-full bg-bg overflow-hidden w-full">
+    <div className={cx('h-full rounded-full tx', color)} style={{width:`${Math.min(100,v/max*100)}%`}}/>
+  </div>
+);
+const Field = ({label, children}) => (
+  <label className="block">
+    <span className="text-xs font-semibold text-muted mb-1.5 block">{label}</span>
+    {children}
+  </label>
+);
+const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-line bg-white text-sm text-ink placeholder-gray-400 focus:border-sap focus:ring-2 focus:ring-sap/15 outline-none tx";
+
+/* ----------------------------- App Context ----------------------------- */
+const App = createContext();
+const useApp = () => useContext(App);
+
+/* ----------------------------- Auth Screen ----------------------------- */
+function Auth() {
+  const { login } = useApp();
+  const [mode, setMode] = useState('login');
+  const [role, setRole] = useState('student');
+  return (
+    <div className="min-h-screen flex">
+      <div className="hidden lg:flex flex-col justify-between w-[44%] bg-gradient-to-br from-sap to-sap-dark text-white p-12 relative overflow-hidden">
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/10"/>
+        <div className="absolute bottom-10 -left-20 w-72 h-72 rounded-full bg-white/5"/>
+        <div className="flex items-center gap-2.5 relative">
+          <div className="w-10 h-10 rounded-xl bg-white text-sap grid place-items-center font-extrabold text-lg">U</div>
+          <span className="text-xl font-extrabold tracking-tight">UniMentor</span>
+        </div>
+        <div className="relative">
+          <h1 className="text-4xl font-extrabold leading-tight">Nadie aprende solo.<br/>Todos crecemos juntos.</h1>
+          <p className="mt-4 text-white/80 text-[15px] leading-relaxed max-w-md">Conectamos estudiantes de primeros semestres con mentores experimentados. Acompañamiento académico inmediato, humano y gratuito.</p>
+          <div className="mt-8 flex gap-8">
+            {[['+1.200','Mentorías'],['98%','Satisfacción'],['-34%','Deserción']].map(([a,b])=>(
+              <div key={b}><div className="text-2xl font-extrabold">{a}</div><div className="text-white/70 text-xs">{b}</div></div>
+            ))}
+          </div>
+        </div>
+        <div className="relative text-white/60 text-xs">Plataforma de bienestar e integración universitaria · 2026</div>
+      </div>
+      <div className="flex-1 grid place-items-center p-6 bg-bg">
+        <Card className="w-full max-w-md p-8 anim-pop">
+          <div className="lg:hidden flex items-center gap-2 mb-6">
+            <div className="w-9 h-9 rounded-xl bg-sap text-white grid place-items-center font-extrabold">U</div>
+            <span className="font-extrabold text-ink">UniMentor</span>
+          </div>
+          <h2 className="text-2xl font-extrabold text-ink">{mode==='login'?'Bienvenido de nuevo':'Crea tu cuenta'}</h2>
+          <p className="text-muted text-sm mt-1">{mode==='login'?'Ingresa para continuar tu acompañamiento':'Únete a la comunidad universitaria'}</p>
+
+          <div className="grid grid-cols-2 gap-2 mt-6">
+            {[['student','Busco ayuda',Ic.user],['mentor','Quiero ser mentor',Ic.spark]].map(([r,t,ic])=>(
+              <button key={r} onClick={()=>setRole(r)} className={cx('tx p-3 rounded-xl border text-left', role===r?'border-sap bg-sap-soft':'border-line hover:border-sap/40')}>
+                <span className={cx('inline-flex w-8 h-8 rounded-lg items-center justify-center mb-2', role===r?'bg-sap text-white':'bg-bg text-muted')}>{React.cloneElement(ic,{s:16})}</span>
+                <div className="text-[13px] font-bold text-ink">{t}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3 mt-5">
+            {mode==='register' && <Field label="Nombre completo"><input className={inputCls} defaultValue="Juan Pérez" /></Field>}
+            <Field label="Correo institucional"><input className={inputCls} defaultValue="juan.perez@universidad.edu.co" /></Field>
+            <Field label="Contraseña"><input type="password" className={inputCls} defaultValue="••••••••" /></Field>
+            {mode==='register' && <Field label="Carrera y semestre"><input className={inputCls} placeholder="Ing. de Sistemas — 2º semestre" /></Field>}
+          </div>
+
+          <Btn className="w-full mt-6" onClick={()=>login(role)}>
+            {mode==='login'?'Iniciar sesión':'Registrarme'} {Ic.arrow}
+          </Btn>
+          <p className="text-center text-sm text-muted mt-5">
+            {mode==='login'?'¿No tienes cuenta?':'¿Ya tienes cuenta?'}{' '}
+            <button onClick={()=>setMode(mode==='login'?'register':'login')} className="text-sap font-bold hover:underline">
+              {mode==='login'?'Regístrate':'Inicia sesión'}
+            </button>
+          </p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------- Shell (Sidebar + Topbar) ----------------------------- */
+function Shell({ children }) {
+  const { role, screen, go, logout } = useApp();
+  const navStudent = [
+    ['dash','Inicio',Ic.grid],['request','Solicitar ayuda',Ic.plus],['matching','Mentores',Ic.spark],
+    ['chat','Mensajes',Ic.chat],['history','Historial',Ic.clock],['profile','Mi perfil',Ic.user],['settings','Configuración',Ic.cog]
+  ];
+  const navMentor = [
+    ['mdash','Inicio',Ic.grid],['mrequests','Solicitudes',Ic.inbox],['chat','Mensajes',Ic.chat],
+    ['incentives','Incentivos',Ic.trophy],['history','Historial',Ic.clock],['availability','Disponibilidad',Ic.cal],['settings','Configuración',Ic.cog]
+  ];
+  const nav = role==='student'?navStudent:navMentor;
+  const me = role==='student'
+    ? { name:'Juan Pérez', tag:'Estudiante · 2º Sem', img:AV(60) }
+    : { name:'Valentina Rojas', tag:'Mentor · 8º Sem', img:AV(47) };
+  return (
+    <div className="min-h-screen flex bg-bg text-ink">
+      <aside className="w-64 shrink-0 bg-white border-r border-line flex flex-col fixed h-screen">
+        <div className="px-5 h-16 flex items-center gap-2.5 border-b border-line">
+          <div className="w-9 h-9 rounded-xl bg-sap text-white grid place-items-center font-extrabold">U</div>
+          <div><div className="font-extrabold leading-none">UniMentor</div><div className="text-[10px] text-muted mt-.5">EdTech · Bienestar</div></div>
+        </div>
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {nav.map(([k,t,ic])=>(
+            <button key={k} onClick={()=>go(k)} className={cx('w-full tx flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold',
+              screen===k?'bg-sap-light text-sap':'text-muted hover:bg-bg hover:text-ink')}>
+              {React.cloneElement(ic,{s:18})}{t}
+            </button>
+          ))}
+        </nav>
+        <div className="p-3 border-t border-line">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-bg tx">
+            <Avatar src={me.img} size={36}/>
+            <div className="min-w-0 flex-1"><div className="text-sm font-bold truncate">{me.name}</div><div className="text-[11px] text-muted truncate">{me.tag}</div></div>
+            <button onClick={logout} className="text-muted hover:text-red-500 tx" title="Salir">{React.cloneElement(Ic.logout,{s:18})}</button>
+          </div>
+        </div>
+      </aside>
+      <div className="flex-1 ml-64 flex flex-col min-w-0">
+        <header className="h-16 bg-white/80 backdrop-blur border-b border-line flex items-center justify-between px-7 sticky top-0 z-20">
+          <div className="relative w-80 max-w-[40vw]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{React.cloneElement(Ic.search,{s:17})}</span>
+            <input placeholder="Buscar materia, mentor o tema…" className="w-full pl-9 pr-3 py-2 rounded-xl bg-bg border border-transparent focus:border-sap focus:bg-white text-sm outline-none tx"/>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="relative w-10 h-10 rounded-xl hover:bg-bg grid place-items-center text-muted tx">
+              {Ic.bell}<span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"/>
+            </button>
+            <Pill color="green">● En línea</Pill>
+          </div>
+        </header>
+        <main className="p-7 flex-1">{children}</main>
+      </div>
+    </div>
+  );
+}
+
+const PageHead = ({title, sub, action}) => (
+  <div className="flex items-end justify-between mb-6 anim-fade">
+    <div><h1 className="text-2xl font-extrabold tracking-tight">{title}</h1><p className="text-muted text-sm mt-1">{sub}</p></div>
+    {action}
+  </div>
+);
+const Stat = ({ic, label, value, color='sap', sub}) => (
+  <Card className="p-5 anim-fade">
+    <div className="flex items-center justify-between">
+      <span className={cx('w-10 h-10 rounded-xl grid place-items-center', `bg-${color}-light text-${color}`, color==='sap'?'bg-sap-light text-sap':'')}>{React.cloneElement(ic,{s:20})}</span>
+      {sub && <Pill color="green">{sub}</Pill>}
+    </div>
+    <div className="text-2xl font-extrabold mt-3">{value}</div>
+    <div className="text-muted text-sm">{label}</div>
+  </Card>
+);
+
+/* ----------------------------- Student: Dashboard ----------------------------- */
+function StudentDash() {
+  const { go } = useApp();
+  return (
+    <>
+      <PageHead title="Hola, Juan 👋" sub="Tu acompañamiento académico empieza aquí." action={<Btn onClick={()=>go('request')}>{Ic.plus} Nueva solicitud</Btn>}/>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Stat ic={Ic.chat} label="Mentorías activas" value="1"/>
+        <Stat ic={Ic.clock} label="Horas recibidas" value="9.5h" sub="+2 esta sem"/>
+        <Stat ic={Ic.book} label="Materias apoyadas" value="4"/>
+        <Stat ic={Ic.trend} label="Promedio actual" value="4.2" sub="↑ 0.4"/>
+      </div>
+      <div className="grid lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-2 p-6 anim-fade">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold">Mentores recomendados para ti</h3>
+            <button onClick={()=>go('matching')} className="text-sap text-sm font-semibold hover:underline">Ver todos</button>
+          </div>
+          <div className="space-y-3">
+            {MENTORS.slice(0,3).map(m=>(
+              <div key={m.id} className="flex items-center gap-4 p-3 rounded-xl border border-line hover:border-sap/40 tx">
+                <Avatar src={m.img} size={48} online={m.online}/>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-sm">{m.name}</div>
+                  <div className="text-muted text-xs">{m.career} · {m.sem}</div>
+                  <div className="flex gap-1 mt-1.5 flex-wrap">{m.subjects.slice(0,2).map(s=><Pill key={s} color="gray">{s}</Pill>)}</div>
+                </div>
+                <div className="text-right"><div className="flex items-center gap-1 text-sm font-bold">{React.cloneElement(Ic.star,{s:14,c:'#fbbf24'})}{m.rating}</div><div className="text-[11px] text-muted">{m.resp} resp.</div></div>
+                <Btn variant="soft" onClick={()=>go('matching')}>Conectar</Btn>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card className="p-6 anim-fade">
+          <h3 className="font-bold mb-4">Próxima sesión</h3>
+          <div className="rounded-xl bg-sap-soft border border-sap/15 p-4">
+            <div className="flex items-center gap-3"><Avatar src={AV(45)} size={44} online/><div><div className="font-bold text-sm">Camila Duarte</div><div className="text-xs text-muted">Estadística</div></div></div>
+            <div className="mt-3 text-sm text-ink flex items-center gap-2">{React.cloneElement(Ic.clock,{s:16,c:'#0A6ED1'})} Hoy · 4:00 PM</div>
+            <Btn className="w-full mt-3" onClick={()=>go('chat')}>{Ic.chat} Ir al chat</Btn>
+          </div>
+          <h3 className="font-bold mt-6 mb-3">Tip de bienestar</h3>
+          <p className="text-sm text-muted leading-relaxed">Pedir ayuda no es debilidad: el 87% de quienes usan mentorías mejoran su promedio en un semestre. 💪</p>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* ----------------------------- Student: Request Form ----------------------------- */
+function RequestForm() {
+  const { go } = useApp();
+  const [urg, setUrg] = useState('Media');
+  return (
+    <>
+      <PageHead title="Solicitar acompañamiento" sub="Cuéntanos en qué necesitas ayuda y te conectamos con un mentor ideal."/>
+      <div className="grid lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-2 p-6 anim-fade space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Materia">
+              <select className={inputCls} defaultValue="Cálculo Diferencial">
+                {['Cálculo Diferencial','Física I','Álgebra Lineal','Programación','Estadística','Química General'].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </Field>
+            <Field label="Tema específico"><input className={inputCls} placeholder="Ej: Límites indeterminados" defaultValue="Límites y continuidad"/></Field>
+          </div>
+          <Field label="Describe tu problema">
+            <textarea rows="4" className={inputCls} defaultValue="No logro resolver límites con la forma indeterminada 0/0. Tengo parcial mañana y quiero entender el método de factorización y L'Hôpital."/>
+          </Field>
+          <div>
+            <span className="text-xs font-semibold text-muted mb-1.5 block">Nivel de urgencia</span>
+            <div className="grid grid-cols-3 gap-2">
+              {[['Baja','gray','Sin afán'],['Media','amber','Esta semana'],['Alta','red','¡Es urgente!']].map(([u,c,d])=>(
+                <button key={u} onClick={()=>setUrg(u)} className={cx('tx p-3 rounded-xl border text-left', urg===u?'border-sap bg-sap-soft':'border-line hover:border-sap/40')}>
+                  <Pill color={c}>{u}</Pill><div className="text-xs text-muted mt-1.5">{d}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Horario preferido">
+              <select className={inputCls}>{['Hoy 4:00–6:00 PM','Hoy en la noche','Mañana en la mañana','Fin de semana','Flexible'].map(s=><option key={s}>{s}</option>)}</select>
+            </Field>
+            <Field label="Modalidad">
+              <select className={inputCls}>{['Chat + pantalla compartida','Solo chat','Videollamada'].map(s=><option key={s}>{s}</option>)}</select>
+            </Field>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Btn className="flex-1" onClick={()=>go('matching')}>Enviar solicitud {Ic.arrow}</Btn>
+            <Btn variant="outline" onClick={()=>go('dash')}>Cancelar</Btn>
+          </div>
+        </Card>
+        <Card className="p-6 anim-fade h-fit">
+          <h3 className="font-bold mb-3">¿Cómo funciona?</h3>
+          {[['1','Envías tu solicitud','Describe tu necesidad académica'],['2','Te mostramos mentores','Perfiles que dominan ese tema'],['3','Ambos aceptan','Se abre un chat privado al instante'],['4','Aprendes y valoras','Tu mentor gana horas de servicio social']].map(([n,t,d])=>(
+            <div key={n} className="flex gap-3 mb-4">
+              <span className="w-7 h-7 rounded-full bg-sap-light text-sap font-bold text-sm grid place-items-center shrink-0">{n}</span>
+              <div><div className="font-bold text-sm">{t}</div><div className="text-muted text-xs">{d}</div></div>
+            </div>
+          ))}
+          <div className="rounded-xl bg-emerald-50 p-3 text-emerald-700 text-xs font-medium">100% gratuito · Mentores verificados por la universidad</div>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* ----------------------------- Student: Matching ----------------------------- */
+function Matching() {
+  const { go } = useApp();
+  const [i, setI] = useState(0);
+  const [state, setState] = useState('search'); // search, card, matched
+  const [openProfile, setOpenProfile] = useState(null);
+  useEffect(()=>{ if(state==='search'){ const t=setTimeout(()=>setState('card'),1900); return ()=>clearTimeout(t);} },[state]);
+  const m = MENTORS[i];
+  const next = () => { setState('search'); setI((i+1)%MENTORS.length); };
+  const accept = () => setState('matched');
+
+  if (state==='search') return (
+    <div className="min-h-[70vh] grid place-items-center">
+      <div className="text-center anim-pop">
+        <div className="relative w-32 h-32 mx-auto">
+          <div className="absolute inset-0 rounded-full bg-sap-light ring-live"/>
+          <div className="absolute inset-4 rounded-full bg-sap text-white grid place-items-center text-3xl font-extrabold">U</div>
+        </div>
+        <h2 className="text-2xl font-extrabold mt-8">Buscando tu mentor ideal…</h2>
+        <p className="text-muted mt-2">Analizando especialidad, disponibilidad y compatibilidad</p>
+        <div className="flex gap-1.5 justify-center mt-5">{[0,1,2].map(d=><span key={d} className="w-2.5 h-2.5 rounded-full bg-sap animate-bounce" style={{animationDelay:`${d*.15}s`}}/>)}</div>
+      </div>
+    </div>
+  );
+
+  if (state==='matched') return (
+    <div className="min-h-[70vh] grid place-items-center">
+      <Card className="max-w-md w-full p-8 text-center anim-pop">
+        <div className="flex items-center justify-center -space-x-4 mb-5">
+          <Avatar src={AV(60)} size={72}/>
+          <span className="z-10 w-12 h-12 rounded-full bg-emerald-500 text-white grid place-items-center shadow-float">{Ic.check}</span>
+          <Avatar src={m.img} size={72}/>
+        </div>
+        <h2 className="text-2xl font-extrabold">¡Es un match! 🎉</h2>
+        <p className="text-muted mt-2">Tú y <b className="text-ink">{m.name}</b> aceptaron la conexión. Su chat privado de <b className="text-ink">{m.subjects[0]}</b> ya está listo.</p>
+        <Btn className="w-full mt-6" onClick={()=>go('chat')}>{Ic.chat} Abrir chat de mentoría</Btn>
+        <button onClick={next} className="text-muted text-sm mt-3 hover:text-ink">Buscar otro mentor</button>
+      </Card>
+    </div>
+  );
+
+  return (
+    <>
+      <PageHead title="Mentores disponibles" sub="Cálculo Diferencial · Límites y continuidad" action={<Pill color="amber">Urgencia media</Pill>}/>
+      <div className="grid lg:grid-cols-5 gap-5">
+        <Card className="lg:col-span-3 p-0 overflow-hidden anim-pop">
+          <div className="h-28 bg-gradient-to-r from-sap to-sap-dark relative">
+            <span className="absolute top-4 right-4">{m.online?<Pill color="green">● En línea ahora</Pill>:<Pill color="gray">Offline</Pill>}</span>
+          </div>
+          <div className="px-7 pb-7 -mt-12">
+            <Avatar src={m.img} size={96} online={m.online}/>
+            <div className="flex items-start justify-between mt-3">
+              <div>
+                <h2 className="text-xl font-extrabold">{m.name}</h2>
+                <p className="text-muted text-sm">{m.career} · {m.sem}</p>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1 justify-end"><Stars n={m.rating}/><span className="font-bold ml-1">{m.rating}</span></div>
+                <div className="text-xs text-muted">{m.reviews} valoraciones</div>
+              </div>
+            </div>
+            <p className="text-sm text-ink/80 mt-4 leading-relaxed">{m.bio}</p>
+            <div className="grid grid-cols-3 gap-3 mt-5">
+              {[[Ic.clock,m.resp,'Respuesta'],[Ic.spark,m.hours+'h','Ayudando'],[Ic.trophy,m.badges.length,'Logros']].map(([ic,a,b],x)=>(
+                <div key={x} className="rounded-xl bg-bg p-3 text-center">
+                  <span className="text-sap inline-flex justify-center mb-1">{React.cloneElement(ic,{s:18})}</span>
+                  <div className="font-extrabold">{a}</div><div className="text-[11px] text-muted">{b}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5">
+              <div className="text-xs font-semibold text-muted mb-2">Materias fuertes</div>
+              <div className="flex gap-2 flex-wrap">{m.subjects.map(s=><Pill key={s}>{s}</Pill>)}</div>
+            </div>
+            <div className="flex gap-3 mt-7">
+              <Btn variant="outline" className="flex-1" onClick={next}>{Ic.swap} Saltar</Btn>
+              <Btn variant="ghost" onClick={()=>setOpenProfile(m)}>Ver perfil</Btn>
+              <Btn className="flex-1" onClick={accept}>{Ic.check} Aceptar mentor</Btn>
+            </div>
+          </div>
+        </Card>
+        <div className="lg:col-span-2 space-y-3">
+          <div className="text-xs font-bold text-muted px-1">SIGUIENTES OPCIONES ({MENTORS.length-1})</div>
+          {MENTORS.filter((_,x)=>x!==i).map(o=>(
+            <Card key={o.id} className="p-4 flex items-center gap-3 anim-slide hover:border-sap/40 tx cursor-pointer" >
+              <Avatar src={o.img} size={44} online={o.online}/>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-sm truncate">{o.name}</div>
+                <div className="text-[11px] text-muted">{o.sem} · {o.subjects[0]}</div>
+              </div>
+              <div className="text-right"><div className="text-sm font-bold flex items-center gap-1">{React.cloneElement(Ic.star,{s:13,c:'#fbbf24'})}{o.rating}</div><div className="text-[10px] text-muted">{o.resp}</div></div>
+            </Card>
+          ))}
+          <Card className="p-4 bg-sap-soft border-sap/15">
+            <div className="text-sm font-bold text-sap flex items-center gap-2">{React.cloneElement(Ic.bolt,{s:16})} Coincidencia alta</div>
+            <p className="text-xs text-muted mt-1">Estos mentores dominan tu tema y están activos ahora.</p>
+          </Card>
+        </div>
+      </div>
+      {openProfile && <ProfileModal m={openProfile} onClose={()=>setOpenProfile(null)}/>}
+    </>
+  );
+}
+
+/* ----------------------------- Mentor Profile Modal ----------------------------- */
+function ProfileModal({ m, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm grid place-items-center p-6" onClick={onClose}>
+      <Card className="max-w-2xl w-full max-h-[88vh] overflow-y-auto p-0 anim-pop" onClick={e=>e.stopPropagation()}>
+        <div className="h-32 bg-gradient-to-r from-sap to-sap-dark relative">
+          <button onClick={onClose} className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/20 text-white grid place-items-center hover:bg-white/30 tx">{Ic.x}</button>
+        </div>
+        <div className="px-8 pb-8 -mt-14">
+          <Avatar src={m.img} size={108} online={m.online}/>
+          <div className="flex items-start justify-between mt-3">
+            <div><h2 className="text-2xl font-extrabold">{m.name}</h2><p className="text-muted">{m.career} · {m.sem}</p></div>
+            <div className="text-right"><div className="flex items-center gap-1 justify-end"><Stars n={m.rating} s={18}/></div><div className="text-sm font-bold mt-1">{m.rating} · {m.reviews} reseñas</div></div>
+          </div>
+          <p className="mt-4 text-ink/80 leading-relaxed">{m.bio}</p>
+          <div className="grid grid-cols-4 gap-3 mt-6">
+            {[['Carrera',m.career],['Semestre',m.sem],['Horas ayudando',m.hours+'h'],['Rating',m.rating+' ★']].map(([a,b])=>(
+              <div key={a} className="rounded-xl bg-bg p-3"><div className="text-[11px] text-muted">{a}</div><div className="font-bold text-sm mt-.5">{b}</div></div>
+            ))}
+          </div>
+          <div className="mt-6"><h3 className="font-bold mb-3">Logros e incentivos</h3>
+            <div className="flex gap-2 flex-wrap">{m.badges.map(b=><span key={b} className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-600 text-xs font-bold flex items-center gap-1.5">{React.cloneElement(Ic.trophy,{s:14})}{b}</span>)}</div>
+          </div>
+          <div className="mt-6"><h3 className="font-bold mb-3">Historial de mentorías</h3>
+            <div className="space-y-2">
+              {SESSIONS.slice(0,3).map(s=>(
+                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-line text-sm">
+                  <div><div className="font-semibold">{s.subject}</div><div className="text-xs text-muted">con {s.with} · {s.date}</div></div>
+                  <div className="flex items-center gap-3"><span className="text-muted text-xs">{s.dur}</span><Stars n={s.rating} s={13}/></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Btn className="w-full mt-7" onClick={onClose}>Cerrar perfil</Btn>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ----------------------------- Chat ----------------------------- */
+function Chat() {
+  const { go } = useApp();
+  const m = MENTORS[0];
+  const [msgs, setMsgs] = useState([
+    { me:false, t:'¡Hola Juan! Vi que necesitas ayuda con límites indeterminados. ¿Tienes el ejercicio a la mano? 😊', ts:'4:01 PM' },
+    { me:true, t:'¡Hola Valentina! Sí, es el límite de (x²-4)/(x-2) cuando x→2', ts:'4:02 PM' },
+    { me:false, t:'Perfecto. Eso da 0/0, así que factorizamos el numerador: x²-4 = (x-2)(x+2). Te comparto pantalla y lo vemos paso a paso.', ts:'4:03 PM' },
+    { me:true, t:'¡Ahí sí lo veo! Entonces se cancela (x-2) y queda x+2 → 4', ts:'4:05 PM' },
+    { me:false, t:'¡Exacto! 🎉 Ese es el método de factorización. Ahora hagamos uno con L\'Hôpital para que compares.', ts:'4:06 PM' },
+  ]);
+  const [val, setVal] = useState('');
+  const [time, setTime] = useState(372);
+  const endRef = useRef();
+  useEffect(()=>{ const t=setInterval(()=>setTime(s=>s+1),1000); return ()=>clearInterval(t); },[]);
+  useEffect(()=>{ endRef.current?.scrollIntoView({behavior:'smooth'}); },[msgs]);
+  const send = () => { if(!val.trim())return; setMsgs([...msgs,{me:true,t:val,ts:'4:08 PM'}]); setVal(''); };
+  const mm = String(Math.floor(time/60)).padStart(2,'0'), ss = String(time%60).padStart(2,'0');
+  return (
+    <div className="-m-7 h-[calc(100vh-4rem)] flex">
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="h-16 bg-white border-b border-line flex items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <button onClick={()=>go('matching')} className="text-muted hover:text-ink tx">{Ic.back}</button>
+            <Avatar src={m.img} size={42} online/>
+            <div><div className="font-bold leading-none">{m.name}</div><div className="text-xs text-emerald-600 mt-1 font-medium">● En línea · {m.subjects[0]}</div></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1.5 rounded-xl bg-sap-light text-sap text-sm font-bold flex items-center gap-1.5">{React.cloneElement(Ic.clock,{s:15})} {mm}:{ss}</span>
+            <Btn variant="outline" className="!px-3">{React.cloneElement(Ic.screen,{s:16})} Compartir pantalla</Btn>
+            <Btn variant="danger" className="!px-3" onClick={()=>go('history')}>{React.cloneElement(Ic.phoneOff,{s:16})} Finalizar</Btn>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-bg">
+          <div className="text-center"><span className="text-xs text-muted bg-white px-3 py-1 rounded-full border border-line">Sesión iniciada · Hoy 4:00 PM</span></div>
+          {msgs.map((x,i)=>(
+            <div key={i} className={cx('flex anim-fade', x.me?'justify-end':'justify-start')}>
+              <div className="flex items-end gap-2 max-w-[70%]">
+                {!x.me && <Avatar src={m.img} size={28}/>}
+                <div>
+                  <div className={cx('px-4 py-2.5 rounded-2xl text-sm leading-relaxed', x.me?'bg-sap text-white rounded-br-md':'bg-white border border-line rounded-bl-md')}>{x.t}</div>
+                  <div className={cx('text-[10px] text-muted mt-1', x.me?'text-right':'')}>{x.ts}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div ref={endRef}/>
+        </div>
+        <div className="bg-white border-t border-line p-4 flex items-center gap-2">
+          <button className="w-10 h-10 rounded-xl hover:bg-bg text-muted grid place-items-center tx" title="Adjuntar archivo">{Ic.paperclip}</button>
+          <input value={val} onChange={e=>setVal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Escribe un mensaje…" className="flex-1 px-4 py-2.5 rounded-xl bg-bg border border-transparent focus:bg-white focus:border-sap outline-none text-sm tx"/>
+          <Btn onClick={send} className="!px-4">{Ic.send}</Btn>
+        </div>
+      </div>
+      <aside className="w-80 bg-white border-l border-line p-5 overflow-y-auto hidden xl:block">
+        <h3 className="font-bold mb-4">Panel de sesión</h3>
+        <div className="rounded-xl bg-sap-soft border border-sap/15 p-4 mb-5">
+          <div className="text-xs text-muted">Materia</div><div className="font-bold">{m.subjects[0]}</div>
+          <div className="text-xs text-muted mt-2">Duración</div><div className="font-bold">{mm}:{ss} min</div>
+        </div>
+        {[
+          ['Temas tratados',[ 'Forma indeterminada 0/0','Factorización de polinomios',"Regla de L'Hôpital",'Continuidad de funciones']],
+          ['Recursos compartidos',['📄 Guía_limites.pdf','🔗 Video: límites en 10 min','📊 Tabla de equivalencias']],
+          ['Ejercicios asignados',['Ej. 3.1 — 5 límites','Quiz práctica (autoevaluación)']]
+        ].map(([t,arr])=>(
+          <div key={t} className="mb-5">
+            <div className="text-xs font-bold text-muted mb-2">{t.toUpperCase()}</div>
+            <div className="space-y-1.5">
+              {arr.map(a=><div key={a} className="text-sm p-2.5 rounded-lg bg-bg flex items-center gap-2"><span className="text-sap">{React.cloneElement(Ic.check,{s:14})}</span>{a}</div>)}
+            </div>
+          </div>
+        ))}
+        <Btn variant="soft" className="w-full">Ver perfil de {m.name.split(' ')[0]}</Btn>
+      </aside>
+    </div>
+  );
+}
+
+/* ----------------------------- Student Profile ----------------------------- */
+function StudentProfile() {
+  return (
+    <>
+      <PageHead title="Mi perfil" sub="Tu progreso académico y acompañamiento."/>
+      <div className="grid lg:grid-cols-3 gap-5">
+        <Card className="p-6 text-center anim-fade">
+          <Avatar src={AV(60)} size={96}/>
+          <h2 className="text-xl font-extrabold mt-3">Juan Pérez</h2>
+          <p className="text-muted text-sm">Ing. de Sistemas · 2º Semestre</p>
+          <div className="flex justify-center gap-2 mt-3"><Pill color="sap">Estudiante</Pill><Pill color="green">Activo</Pill></div>
+          <div className="grid grid-cols-3 gap-3 mt-6 text-center">
+            {[['12','Sesiones'],['9.5h','Recibidas'],['4.8','Mi rating']].map(([a,b])=>(
+              <div key={b}><div className="text-lg font-extrabold">{a}</div><div className="text-[11px] text-muted">{b}</div></div>
+            ))}
+          </div>
+        </Card>
+        <Card className="lg:col-span-2 p-6 anim-fade">
+          <h3 className="font-bold mb-4">Progreso por materia</h3>
+          {[['Cálculo Diferencial',75,'bg-sap'],['Física I',55,'bg-emerald-500'],['Álgebra Lineal',40,'bg-amber-500'],['Programación',88,'bg-violet-500']].map(([s,v,c])=>(
+            <div key={s} className="mb-4">
+              <div className="flex justify-between text-sm mb-1.5"><span className="font-semibold">{s}</span><span className="text-muted">{v}%</span></div>
+              <Progress v={v} color={c}/>
+            </div>
+          ))}
+          <div className="mt-6 rounded-xl bg-sap-soft border border-sap/15 p-4 flex items-center gap-3">
+            {React.cloneElement(Ic.trend,{s:22,c:'#0A6ED1'})}
+            <div className="text-sm"><b>Vas muy bien.</b> Tu promedio subió 0.4 puntos desde que empezaste mentorías.</div>
+          </div>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* ----------------------------- Mentor Dashboard ----------------------------- */
+function MentorDash() {
+  const { go } = useApp();
+  return (
+    <>
+      <PageHead title="Hola, Valentina ✨" sub="Tu impacto en la comunidad universitaria." action={<Btn onClick={()=>go('mrequests')}>{Ic.inbox} Ver solicitudes</Btn>}/>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Stat ic={Ic.spark} label="Estudiantes ayudados" value="64"/>
+        <Stat ic={Ic.clock} label="Horas de servicio" value="142h" sub="+6 esta sem"/>
+        <Stat ic={Ic.star} label="Rating promedio" value="4.9"/>
+        <Stat ic={Ic.trophy} label="Puntos UniMentor" value="2.840" sub="↑ 120"/>
+      </div>
+      <div className="grid lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-2 p-6 anim-fade">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold">Solicitudes entrantes</h3>
+            <Pill color="red">{REQUESTS.length} nuevas</Pill>
+          </div>
+          <div className="space-y-3">
+            {REQUESTS.map(r=>(
+              <div key={r.id} className="flex items-center gap-4 p-4 rounded-xl border border-line hover:border-sap/40 tx anim-slide">
+                <Avatar src={r.img} size={46}/>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2"><span className="font-bold text-sm">{r.name}</span><Pill color="gray">{r.sem}</Pill></div>
+                  <div className="text-sm text-ink/70 mt-.5">{r.subject} — {r.topic}</div>
+                  <div className="text-[11px] text-muted mt-1">{r.ago}</div>
+                </div>
+                <Pill color={r.urgency==='Alta'?'red':r.urgency==='Media'?'amber':'gray'}>{r.urgency}</Pill>
+                <div className="flex gap-2">
+                  <Btn variant="outline" className="!px-3 !py-2" >{Ic.x}</Btn>
+                  <Btn variant="success" className="!px-3 !py-2" onClick={()=>go('chat')}>{Ic.check} Aceptar</Btn>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <div className="space-y-5">
+          <Card className="p-6 anim-fade">
+            <h3 className="font-bold mb-3">Sesión activa</h3>
+            <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+              <div className="flex items-center gap-3"><Avatar src={AV(60)} size={42} online/><div><div className="font-bold text-sm">Juan Pérez</div><div className="text-xs text-muted">Cálculo · 06:12 min</div></div></div>
+              <Btn className="w-full mt-3" onClick={()=>go('chat')}>{Ic.chat} Continuar</Btn>
+            </div>
+          </Card>
+          <Card className="p-6 anim-fade">
+            <h3 className="font-bold mb-2">Progreso de incentivos</h3>
+            <div className="text-sm text-muted mb-2">142 / 150h para la beca parcial</div>
+            <Progress v={142} max={150}/>
+            <Btn variant="soft" className="w-full mt-4" onClick={()=>go('incentives')}>{Ic.trophy} Ver recompensas</Btn>
+          </Card>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ----------------------------- Mentor Requests ----------------------------- */
+function MentorRequests() {
+  const { go } = useApp();
+  return (
+    <>
+      <PageHead title="Solicitudes en tiempo real" sub="Acepta las que dominas. Cada mentoría suma horas y puntos." action={<Pill color="green">● Disponible</Pill>}/>
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {[...REQUESTS,...REQUESTS.map(r=>({...r,id:r.id+10,ago:'hace '+(r.id*7)+' min'}))].map(r=>(
+          <Card key={r.id} className="p-5 anim-fade hover:shadow-float tx">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3"><Avatar src={r.img} size={44}/><div><div className="font-bold text-sm">{r.name}</div><div className="text-xs text-muted">{r.sem}</div></div></div>
+              <Pill color={r.urgency==='Alta'?'red':r.urgency==='Media'?'amber':'gray'}>{r.urgency}</Pill>
+            </div>
+            <div className="mt-4"><div className="font-bold text-sm text-sap">{r.subject}</div><div className="text-sm text-muted">{r.topic}</div></div>
+            <p className="text-sm text-ink/70 mt-2 leading-relaxed line-clamp-2">{r.desc}</p>
+            <div className="text-[11px] text-muted mt-3 flex items-center gap-1.5">{React.cloneElement(Ic.clock,{s:13})} {r.ago}</div>
+            <div className="flex gap-2 mt-4">
+              <Btn variant="outline" className="flex-1">{Ic.x} Rechazar</Btn>
+              <Btn variant="success" className="flex-1" onClick={()=>go('chat')}>{Ic.check} Aceptar</Btn>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ----------------------------- Incentives ----------------------------- */
+function Incentives() {
+  return (
+    <>
+      <PageHead title="Sistema de incentivos" sub="Ayudar transforma a otros — y te recompensa a ti."/>
+      <div className="grid lg:grid-cols-3 gap-5 mb-6">
+        <Card className="lg:col-span-2 p-6 bg-gradient-to-br from-sap to-sap-dark text-white anim-fade relative overflow-hidden">
+          <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10"/>
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              <div><div className="text-white/70 text-sm">Horas de servicio social acumuladas</div><div className="text-5xl font-extrabold mt-1">142<span className="text-2xl">h</span></div></div>
+              <span className="w-14 h-14 rounded-2xl bg-white/15 grid place-items-center">{React.cloneElement(Ic.fire,{s:28})}</span>
+            </div>
+            <div className="mt-6">
+              <div className="flex justify-between text-sm text-white/80 mb-2"><span>Próxima meta: Beca parcial (150h)</span><span>95%</span></div>
+              <div className="h-3 rounded-full bg-white/20 overflow-hidden"><div className="h-full bg-white rounded-full" style={{width:'95%'}}/></div>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              {[['2.840','Puntos'],['64','Estudiantes'],['#3','Ranking facultad']].map(([a,b])=>(
+                <div key={b}><div className="text-2xl font-extrabold">{a}</div><div className="text-white/70 text-xs">{b}</div></div>
+              ))}
+            </div>
+          </div>
+        </Card>
+        <Card className="p-6 anim-fade">
+          <h3 className="font-bold mb-4">Tu racha</h3>
+          <div className="text-center py-2">
+            <div className="text-5xl font-extrabold text-sap flex items-center justify-center gap-2">{React.cloneElement(Ic.fire,{s:36,c:'#0A6ED1'})}30</div>
+            <div className="text-muted text-sm mt-1">días ayudando seguidos</div>
+          </div>
+          <div className="flex justify-between gap-1 mt-4">{Array.from({length:7}).map((_,i)=><span key={i} className={cx('flex-1 h-9 rounded-lg grid place-items-center text-xs font-bold', i<6?'bg-sap-light text-sap':'bg-bg text-muted')}>{['L','M','M','J','V','S','D'][i]}</span>)}</div>
+        </Card>
+      </div>
+      <Card className="p-6 anim-fade">
+        <h3 className="font-bold mb-4">Recompensas</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {REWARDS.map(r=>(
+            <div key={r.id} className={cx('rounded-xl border p-4 flex gap-4 tx', r.done?'border-emerald-200 bg-emerald-50/50':'border-line')}>
+              <span className={cx('w-12 h-12 rounded-xl grid place-items-center shrink-0', r.done?'bg-emerald-500 text-white':'bg-sap-light text-sap')}>{React.cloneElement(r.ic,{s:22})}</span>
+              <div className="flex-1">
+                <div className="flex items-center justify-between"><div className="font-bold text-sm">{r.t}</div>{r.done?<Pill color="green">Desbloqueado</Pill>:<Pill color="gray">{r.need}h</Pill>}</div>
+                <div className="text-xs text-muted mt-.5">{r.d}</div>
+                {!r.done && <div className="mt-2"><Progress v={142} max={r.need}/></div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </>
+  );
+}
+
+/* ----------------------------- History ----------------------------- */
+function History() {
+  return (
+    <>
+      <PageHead title="Historial de mentorías" sub="Todas tus sesiones de acompañamiento." action={<Btn variant="outline">{Ic.cal} Filtrar</Btn>}/>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Stat ic={Ic.check} label="Sesiones totales" value="64"/>
+        <Stat ic={Ic.clock} label="Tiempo total" value="142h"/>
+        <Stat ic={Ic.star} label="Rating promedio" value="4.9"/>
+        <Stat ic={Ic.user} label="Estudiantes únicos" value="48"/>
+      </div>
+      <Card className="anim-fade overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-bg text-muted text-xs uppercase"><tr>
+            {['Estudiante','Materia','Fecha','Duración','Valoración','Estado'].map(h=><th key={h} className="text-left font-bold px-5 py-3">{h}</th>)}
+          </tr></thead>
+          <tbody>
+            {[...SESSIONS,...SESSIONS.map(s=>({...s,id:s.id+10,date:'0'+s.id+' May 2026'}))].map(s=>(
+              <tr key={s.id} className="border-t border-line hover:bg-bg tx">
+                <td className="px-5 py-4"><div className="flex items-center gap-3"><Avatar src={AV(s.id*5+10)} size={34}/><span className="font-semibold">{s.with}</span></div></td>
+                <td className="px-5 py-4 text-muted">{s.subject}</td>
+                <td className="px-5 py-4 text-muted">{s.date}</td>
+                <td className="px-5 py-4 text-muted">{s.dur}</td>
+                <td className="px-5 py-4"><Stars n={s.rating} s={14}/></td>
+                <td className="px-5 py-4"><Pill color="green">{s.status}</Pill></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </>
+  );
+}
+
+/* ----------------------------- Availability ----------------------------- */
+function Availability() {
+  const [days,setDays] = useState({Lun:true,Mar:true,Mie:false,Jue:true,Vie:true,Sab:false,Dom:false});
+  const [on,setOn] = useState(true);
+  return (
+    <>
+      <PageHead title="Disponibilidad" sub="Controla cuándo recibes solicitudes de mentoría."/>
+      <div className="grid lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-2 p-6 anim-fade">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-sap-soft border border-sap/15 mb-6">
+            <div><div className="font-bold">Estado de mentor</div><div className="text-sm text-muted">{on?'Recibiendo solicitudes':'Pausado'}</div></div>
+            <button onClick={()=>setOn(!on)} className={cx('w-14 h-8 rounded-full tx relative', on?'bg-emerald-500':'bg-gray-300')}>
+              <span className={cx('absolute top-1 w-6 h-6 rounded-full bg-white tx shadow', on?'left-7':'left-1')}/>
+            </button>
+          </div>
+          <h3 className="font-bold mb-3">Días disponibles</h3>
+          <div className="grid grid-cols-7 gap-2 mb-6">
+            {Object.entries(days).map(([d,v])=>(
+              <button key={d} onClick={()=>setDays({...days,[d]:!v})} className={cx('py-3 rounded-xl text-sm font-bold tx', v?'bg-sap text-white':'bg-bg text-muted hover:bg-sap-light')}>{d}</button>
+            ))}
+          </div>
+          <h3 className="font-bold mb-3">Franja horaria</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Desde"><input type="time" defaultValue="16:00" className={inputCls}/></Field>
+            <Field label="Hasta"><input type="time" defaultValue="21:00" className={inputCls}/></Field>
+          </div>
+          <Btn className="mt-6">{Ic.check} Guardar disponibilidad</Btn>
+        </Card>
+        <Card className="p-6 anim-fade h-fit">
+          <h3 className="font-bold mb-3">Materias que enseñas</h3>
+          <div className="flex flex-wrap gap-2">
+            {['Cálculo Diferencial','Álgebra Lineal','Física I','Física II','Programación C++','Estadística'].map((s,i)=>(
+              <span key={s} className={cx('px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5', i<3?'bg-sap text-white':'bg-bg text-muted')}>{s}{i<3&&React.cloneElement(Ic.x,{s:12})}</span>
+            ))}
+          </div>
+          <Btn variant="outline" className="w-full mt-4">{Ic.plus} Añadir materia</Btn>
+          <div className="mt-6 rounded-xl bg-amber-50 p-4 text-amber-700 text-xs">Mientras más materias y horas, más puntos y recompensas acumulas.</div>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* ----------------------------- Settings ----------------------------- */
+function Settings() {
+  const { role } = useApp();
+  const me = role==='student' ? {n:'Juan Pérez',c:'Ing. de Sistemas — 2º semestre',img:AV(60)} : {n:'Valentina Rojas',c:'Ing. de Sistemas — 8º semestre',img:AV(47)};
+  return (
+    <>
+      <PageHead title="Configuración de perfil" sub="Administra tu información y preferencias."/>
+      <div className="grid lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-2 p-6 anim-fade space-y-4">
+          <div className="flex items-center gap-4 pb-5 border-b border-line">
+            <Avatar src={me.img} size={72}/>
+            <div><div className="font-bold">{me.n}</div><div className="text-sm text-muted">{me.c}</div></div>
+            <Btn variant="outline" className="ml-auto">Cambiar foto</Btn>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Nombre"><input className={inputCls} defaultValue={me.n}/></Field>
+            <Field label="Correo institucional"><input className={inputCls} defaultValue="usuario@universidad.edu.co"/></Field>
+            <Field label="Carrera"><input className={inputCls} defaultValue="Ingeniería de Sistemas"/></Field>
+            <Field label="Semestre"><input className={inputCls} defaultValue={role==='student'?'2':'8'}/></Field>
+          </div>
+          <Field label="Sobre mí"><textarea rows="3" className={inputCls} defaultValue="Apasionado por aprender y ayudar a otros a lograr su mejor versión académica."/></Field>
+          <Btn>{Ic.check} Guardar cambios</Btn>
+        </Card>
+        <Card className="p-6 anim-fade h-fit">
+          <h3 className="font-bold mb-4">Preferencias</h3>
+          {[['Notificaciones push',true],['Alertas de solicitudes',true],['Resumen semanal por correo',false],['Mostrar estado en línea',true]].map(([t,d])=>(
+            <div key={t} className="flex items-center justify-between py-3 border-b border-line last:border-0">
+              <span className="text-sm">{t}</span>
+              <Toggle def={d}/>
+            </div>
+          ))}
+          <Btn variant="danger" className="w-full mt-6">{Ic.logout} Cerrar todas las sesiones</Btn>
+        </Card>
+      </div>
+    </>
+  );
+}
+function Toggle({def}) {
+  const [on,setOn]=useState(def);
+  return <button onClick={()=>setOn(!on)} className={cx('w-12 h-7 rounded-full tx relative', on?'bg-sap':'bg-gray-300')}><span className={cx('absolute top-1 w-5 h-5 rounded-full bg-white tx shadow', on?'left-6':'left-1')}/></button>;
+}
+
+/* ----------------------------- Router ----------------------------- */
+function Root() {
+  const [auth, setAuth] = useState(false);
+  const [role, setRole] = useState('student');
+  const [screen, setScreen] = useState('dash');
+  const ctx = {
+    role, screen,
+    login:(r)=>{ setRole(r); setScreen(r==='student'?'dash':'mdash'); setAuth(true); },
+    logout:()=>{ setAuth(false); },
+    go:setScreen,
+  };
+  if (!auth) return <App.Provider value={ctx}><Auth/></App.Provider>;
+  const screens = {
+    dash:<StudentDash/>, request:<RequestForm/>, matching:<Matching/>, chat:<Chat/>,
+    history:<History/>, profile:<StudentProfile/>, settings:<Settings/>,
+    mdash:<MentorDash/>, mrequests:<MentorRequests/>, incentives:<Incentives/>, availability:<Availability/>,
+  };
+  return (
+    <App.Provider value={ctx}>
+      <Shell>{screens[screen] || <StudentDash/>}</Shell>
+    </App.Provider>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+</body>
+</html>
