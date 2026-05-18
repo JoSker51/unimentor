@@ -34,12 +34,16 @@
   body{font-family:'Inter',sans-serif;background:#F4F6F8}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-  @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(10,110,209,.35)}70%{box-shadow:0 0 0 12px rgba(10,110,209,0)}100%{box-shadow:0 0 0 0 rgba(10,110,209,0)}}
+  @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(10,110,209,.35)}70%{box-shadow:0 0 0 14px rgba(10,110,209,0)}100%{box-shadow:0 0 0 0 rgba(10,110,209,0)}}
   @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
   .anim-fade{animation:fadeUp .45s cubic-bezier(.2,.7,.3,1) both}
   .anim-pop{animation:pop .35s cubic-bezier(.2,.7,.3,1) both}
   .anim-slide{animation:slideIn .4s ease both}
+  .anim-toast{animation:toastIn .35s cubic-bezier(.2,.7,.3,1) both}
   .ring-live{animation:pulseRing 2s infinite}
+  .spin{animation:spin 1s linear infinite}
   .tx{transition:all .2s ease}
 </style>
 </head>
@@ -82,10 +86,12 @@ const Ic = {
   swap:<I d={<><path d="M3 7h13l-3-3M21 17H8l3 3"/></>}/>,
   fire:<I d={<><path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 1-3s-3 2-3 6a6 6 0 0 0 12 0c0-6-6-11-6-11z"/></>}/>,
   award:<I d={<><circle cx="12" cy="9" r="6"/><path d="M9 14.5L8 22l4-2 4 2-1-7.5"/></>}/>,
+  menu:<I d={<><path d="M3 6h18M3 12h18M3 18h18"/></>}/>,
+  file:<I d={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></>}/>,
 };
 
 /* ----------------------------- Mock Data ----------------------------- */
-const AV = (seed, bg='0A6ED1') => `https://i.pravatar.cc/160?img=${seed}`;
+const AV = (seed) => `https://i.pravatar.cc/160?img=${seed}`;
 const MENTORS = [
   { id:1, name:'Valentina Rojas', sem:'8º Semestre', career:'Ing. de Sistemas', img:AV(47), rating:4.9, reviews:128, resp:'2 min', online:true, subjects:['Cálculo Diferencial','Álgebra Lineal','Física I'], hours:142, bio:'Monitora oficial de Cálculo. Me apasiona explicar con ejemplos del mundo real y paso a paso.', badges:['Top Mentor','100h Servicio','Racha 30 días'] },
   { id:2, name:'Sebastián Marín', sem:'9º Semestre', career:'Ing. Electrónica', img:AV(12), rating:4.8, reviews:96, resp:'5 min', online:true, subjects:['Circuitos','Física II','Programación C++'], hours:118, bio:'Ayudo con laboratorios y proyectos. Explico desde lo básico sin asumir nada.', badges:['Mentor Verificado','Bono académico'] },
@@ -93,16 +99,19 @@ const MENTORS = [
   { id:4, name:'Andrés Beltrán', sem:'10º Semestre', career:'Ing. Industrial', img:AV(33), rating:4.7, reviews:152, resp:'8 min', online:false, subjects:['Investigación de Operaciones','Cálculo Integral'], hours:201, bio:'Más de 200 horas acompañando primíparos. Enfoque en entender, no memorizar.', badges:['Leyenda 200h','Top Mentor'] },
   { id:5, name:'Mariana López', sem:'8º Semestre', career:'Matemáticas', img:AV(20), rating:4.9, reviews:110, resp:'3 min', online:true, subjects:['Álgebra Lineal','Ecuaciones Diferenciales'], hours:134, bio:'Las matemáticas se disfrutan cuando se entienden. Vamos a tu ritmo.', badges:['Mentor Verificado','Racha 20 días'] },
 ];
-const REQUESTS = [
+const REQ0 = [
   { id:1, name:'Juan Pérez', sem:'2º Sem', subject:'Cálculo Diferencial', topic:'Límites y continuidad', urgency:'Alta', ago:'hace 2 min', img:AV(60), desc:'No entiendo cómo resolver límites indeterminados 0/0 para el parcial de mañana.' },
   { id:2, name:'Laura Gómez', sem:'1º Sem', subject:'Física I', topic:'Cinemática', urgency:'Media', ago:'hace 9 min', img:AV(31), desc:'Necesito ayuda con problemas de movimiento parabólico, tengo taller el viernes.' },
   { id:3, name:'Diego Torres', sem:'3º Sem', subject:'Álgebra Lineal', topic:'Matrices y determinantes', urgency:'Baja', ago:'hace 21 min', img:AV(15), desc:'Quiero reforzar operaciones con matrices antes del próximo quiz.' },
+  { id:4, name:'Sofía Ríos', sem:'2º Sem', subject:'Programación C++', topic:'Punteros y memoria', urgency:'Alta', ago:'hace 26 min', img:AV(48), desc:'Mi código da segfault y no entiendo por qué. Entrega es esta noche.' },
+  { id:5, name:'Pablo Mesa', sem:'1º Sem', subject:'Química General', topic:'Estequiometría', urgency:'Media', ago:'hace 33 min', img:AV(53), desc:'No sé balancear ecuaciones ni calcular moles. Necesito reforzar lo básico.' },
+  { id:6, name:'Daniela Cruz', sem:'3º Sem', subject:'Estadística', topic:'Distribución normal', urgency:'Baja', ago:'hace 41 min', img:AV(44), desc:'Quiero entender cómo usar la tabla Z antes del parcial.' },
 ];
-const SESSIONS = [
-  { id:1, with:'Juan Pérez', subject:'Cálculo Diferencial', date:'17 May 2026', dur:'48 min', rating:5, status:'Completada' },
-  { id:2, with:'Laura Gómez', subject:'Física I', date:'15 May 2026', dur:'1h 12min', rating:5, status:'Completada' },
-  { id:3, with:'Sofía Ríos', subject:'Álgebra Lineal', date:'12 May 2026', dur:'35 min', rating:4, status:'Completada' },
-  { id:4, with:'Pablo Mesa', subject:'Programación C++', date:'09 May 2026', dur:'55 min', rating:5, status:'Completada' },
+const SESSIONS0 = [
+  { id:101, with:'Juan Pérez', subject:'Cálculo Diferencial', date:'17 May 2026', dur:'48 min', rating:5, status:'Completada' },
+  { id:102, with:'Laura Gómez', subject:'Física I', date:'15 May 2026', dur:'1h 12min', rating:5, status:'Completada' },
+  { id:103, with:'Sofía Ríos', subject:'Álgebra Lineal', date:'12 May 2026', dur:'35 min', rating:4, status:'Completada' },
+  { id:104, with:'Pablo Mesa', subject:'Programación C++', date:'09 May 2026', dur:'55 min', rating:5, status:'Completada' },
 ];
 const REWARDS = [
   { id:1, t:'Certificado de Servicio Social', d:'40 horas validadas por Bienestar', need:40, ic:Ic.award, done:true },
@@ -123,7 +132,7 @@ const Btn = ({variant='primary', className, children, ...p}) => {
     danger:'bg-red-50 text-red-600 hover:bg-red-100',
     success:'bg-emerald-500 text-white hover:bg-emerald-600',
   }[variant];
-  return <button {...p} className={cx('tx px-4 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 active:scale-[.97]', v, className)}>{children}</button>;
+  return <button {...p} className={cx('tx px-4 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 active:scale-[.97] disabled:opacity-50 disabled:pointer-events-none', v, className)}>{children}</button>;
 };
 const Pill = ({color='sap', children}) => {
   const c = { sap:'bg-sap-light text-sap', green:'bg-emerald-50 text-emerald-600', amber:'bg-amber-50 text-amber-600', red:'bg-red-50 text-red-600', gray:'bg-bg text-muted' }[color];
@@ -156,6 +165,23 @@ const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-line bg-white te
 /* ----------------------------- App Context ----------------------------- */
 const App = createContext();
 const useApp = () => useContext(App);
+
+/* ----------------------------- Toasts ----------------------------- */
+function Toasts({ items }) {
+  return (
+    <div className="fixed top-5 right-5 z-[100] space-y-2 w-80 max-w-[90vw]">
+      {items.map(t=>(
+        <div key={t.id} className="anim-toast bg-white border border-line shadow-float rounded-xl p-3.5 flex items-start gap-3">
+          <span className={cx('w-8 h-8 rounded-lg grid place-items-center shrink-0 text-white',
+            t.type==='error'?'bg-red-500':t.type==='info'?'bg-sap':'bg-emerald-500')}>
+            {React.cloneElement(t.type==='error'?Ic.x:t.type==='info'?Ic.bell:Ic.check,{s:16})}
+          </span>
+          <div className="text-sm text-ink leading-snug">{t.msg}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /* ----------------------------- Auth Screen ----------------------------- */
 function Auth() {
@@ -203,7 +229,7 @@ function Auth() {
           <div className="space-y-3 mt-5">
             {mode==='register' && <Field label="Nombre completo"><input className={inputCls} defaultValue="Juan Pérez" /></Field>}
             <Field label="Correo institucional"><input className={inputCls} defaultValue="juan.perez@universidad.edu.co" /></Field>
-            <Field label="Contraseña"><input type="password" className={inputCls} defaultValue="••••••••" /></Field>
+            <Field label="Contraseña"><input type="password" className={inputCls} defaultValue="claveSegura" /></Field>
             {mode==='register' && <Field label="Carrera y semestre"><input className={inputCls} placeholder="Ing. de Sistemas — 2º semestre" /></Field>}
           </div>
 
@@ -225,6 +251,8 @@ function Auth() {
 /* ----------------------------- Shell (Sidebar + Topbar) ----------------------------- */
 function Shell({ children }) {
   const { role, screen, go, logout } = useApp();
+  const [open, setOpen] = useState(false);
+  useEffect(()=>{ setOpen(false); },[screen]);
   const navStudent = [
     ['dash','Inicio',Ic.grid],['request','Solicitar ayuda',Ic.plus],['matching','Mentores',Ic.spark],
     ['chat','Mensajes',Ic.chat],['history','Historial',Ic.clock],['profile','Mi perfil',Ic.user],['settings','Configuración',Ic.cog]
@@ -239,7 +267,9 @@ function Shell({ children }) {
     : { name:'Valentina Rojas', tag:'Mentor · 8º Sem', img:AV(47) };
   return (
     <div className="min-h-screen flex bg-bg text-ink">
-      <aside className="w-64 shrink-0 bg-white border-r border-line flex flex-col fixed h-screen">
+      {open && <div onClick={()=>setOpen(false)} className="fixed inset-0 bg-ink/40 z-30 lg:hidden"/>}
+      <aside className={cx('w-64 shrink-0 bg-white border-r border-line flex flex-col fixed h-screen z-40 tx',
+        open?'translate-x-0':'-translate-x-full lg:translate-x-0')}>
         <div className="px-5 h-16 flex items-center gap-2.5 border-b border-line">
           <div className="w-9 h-9 rounded-xl bg-sap text-white grid place-items-center font-extrabold">U</div>
           <div><div className="font-extrabold leading-none">UniMentor</div><div className="text-[10px] text-muted mt-.5">EdTech · Bienestar</div></div>
@@ -260,11 +290,14 @@ function Shell({ children }) {
           </div>
         </div>
       </aside>
-      <div className="flex-1 ml-64 flex flex-col min-w-0">
-        <header className="h-16 bg-white/80 backdrop-blur border-b border-line flex items-center justify-between px-7 sticky top-0 z-20">
-          <div className="relative w-80 max-w-[40vw]">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{React.cloneElement(Ic.search,{s:17})}</span>
-            <input placeholder="Buscar materia, mentor o tema…" className="w-full pl-9 pr-3 py-2 rounded-xl bg-bg border border-transparent focus:border-sap focus:bg-white text-sm outline-none tx"/>
+      <div className="flex-1 lg:ml-64 flex flex-col min-w-0">
+        <header className="h-16 bg-white/80 backdrop-blur border-b border-line flex items-center justify-between px-4 sm:px-7 sticky top-0 z-20">
+          <div className="flex items-center gap-3 flex-1">
+            <button onClick={()=>setOpen(true)} className="lg:hidden w-10 h-10 rounded-xl hover:bg-bg grid place-items-center text-muted tx">{Ic.menu}</button>
+            <div className="relative w-80 max-w-[42vw] hidden sm:block">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{React.cloneElement(Ic.search,{s:17})}</span>
+              <input placeholder="Buscar materia, mentor o tema…" className="w-full pl-9 pr-3 py-2 rounded-xl bg-bg border border-transparent focus:border-sap focus:bg-white text-sm outline-none tx"/>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button className="relative w-10 h-10 rounded-xl hover:bg-bg grid place-items-center text-muted tx">
@@ -273,22 +306,22 @@ function Shell({ children }) {
             <Pill color="green">● En línea</Pill>
           </div>
         </header>
-        <main className="p-7 flex-1">{children}</main>
+        <main className="p-4 sm:p-7 flex-1">{children}</main>
       </div>
     </div>
   );
 }
 
 const PageHead = ({title, sub, action}) => (
-  <div className="flex items-end justify-between mb-6 anim-fade">
+  <div className="flex flex-wrap items-end justify-between gap-3 mb-6 anim-fade">
     <div><h1 className="text-2xl font-extrabold tracking-tight">{title}</h1><p className="text-muted text-sm mt-1">{sub}</p></div>
     {action}
   </div>
 );
-const Stat = ({ic, label, value, color='sap', sub}) => (
+const Stat = ({ic, label, value, sub}) => (
   <Card className="p-5 anim-fade">
     <div className="flex items-center justify-between">
-      <span className={cx('w-10 h-10 rounded-xl grid place-items-center', `bg-${color}-light text-${color}`, color==='sap'?'bg-sap-light text-sap':'')}>{React.cloneElement(ic,{s:20})}</span>
+      <span className="w-10 h-10 rounded-xl grid place-items-center bg-sap-light text-sap">{React.cloneElement(ic,{s:20})}</span>
       {sub && <Pill color="green">{sub}</Pill>}
     </div>
     <div className="text-2xl font-extrabold mt-3">{value}</div>
@@ -298,7 +331,7 @@ const Stat = ({ic, label, value, color='sap', sub}) => (
 
 /* ----------------------------- Student: Dashboard ----------------------------- */
 function StudentDash() {
-  const { go } = useApp();
+  const { go, openChatWith } = useApp();
   return (
     <>
       <PageHead title="Hola, Juan 👋" sub="Tu acompañamiento académico empieza aquí." action={<Btn onClick={()=>go('request')}>{Ic.plus} Nueva solicitud</Btn>}/>
@@ -323,7 +356,7 @@ function StudentDash() {
                   <div className="text-muted text-xs">{m.career} · {m.sem}</div>
                   <div className="flex gap-1 mt-1.5 flex-wrap">{m.subjects.slice(0,2).map(s=><Pill key={s} color="gray">{s}</Pill>)}</div>
                 </div>
-                <div className="text-right"><div className="flex items-center gap-1 text-sm font-bold">{React.cloneElement(Ic.star,{s:14,c:'#fbbf24'})}{m.rating}</div><div className="text-[11px] text-muted">{m.resp} resp.</div></div>
+                <div className="text-right hidden sm:block"><div className="flex items-center gap-1 text-sm font-bold">{React.cloneElement(Ic.star,{s:14,c:'#fbbf24'})}{m.rating}</div><div className="text-[11px] text-muted">{m.resp} resp.</div></div>
                 <Btn variant="soft" onClick={()=>go('matching')}>Conectar</Btn>
               </div>
             ))}
@@ -334,7 +367,7 @@ function StudentDash() {
           <div className="rounded-xl bg-sap-soft border border-sap/15 p-4">
             <div className="flex items-center gap-3"><Avatar src={AV(45)} size={44} online/><div><div className="font-bold text-sm">Camila Duarte</div><div className="text-xs text-muted">Estadística</div></div></div>
             <div className="mt-3 text-sm text-ink flex items-center gap-2">{React.cloneElement(Ic.clock,{s:16,c:'#0A6ED1'})} Hoy · 4:00 PM</div>
-            <Btn className="w-full mt-3" onClick={()=>go('chat')}>{Ic.chat} Ir al chat</Btn>
+            <Btn className="w-full mt-3" onClick={()=>openChatWith({name:'Camila Duarte',img:AV(45),subject:'Estadística'})}>{Ic.chat} Ir al chat</Btn>
           </div>
           <h3 className="font-bold mt-6 mb-3">Tip de bienestar</h3>
           <p className="text-sm text-muted leading-relaxed">Pedir ayuda no es debilidad: el 87% de quienes usan mentorías mejoran su promedio en un semestre. 💪</p>
@@ -346,8 +379,15 @@ function StudentDash() {
 
 /* ----------------------------- Student: Request Form ----------------------------- */
 function RequestForm() {
-  const { go } = useApp();
-  const [urg, setUrg] = useState('Media');
+  const { go, setReq, toast } = useApp();
+  const [f, setF] = useState({ subject:'Cálculo Diferencial', topic:'Límites y continuidad',
+    desc:"No logro resolver límites con la forma indeterminada 0/0. Tengo parcial mañana y quiero entender el método de factorización y L'Hôpital.",
+    urgency:'Media', time:'Hoy 4:00–6:00 PM', mode:'Chat + pantalla compartida' });
+  const set = (k,v) => setF({...f,[k]:v});
+  const submit = () => {
+    if(!f.subject || !f.topic.trim()){ toast('Completa la materia y el tema específico','error'); return; }
+    setReq(f); toast('Solicitud enviada. Buscando tu mentor ideal…','info'); go('matching');
+  };
   return (
     <>
       <PageHead title="Solicitar acompañamiento" sub="Cuéntanos en qué necesitas ayuda y te conectamos con un mentor ideal."/>
@@ -355,20 +395,20 @@ function RequestForm() {
         <Card className="lg:col-span-2 p-6 anim-fade space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Materia">
-              <select className={inputCls} defaultValue="Cálculo Diferencial">
-                {['Cálculo Diferencial','Física I','Álgebra Lineal','Programación','Estadística','Química General'].map(s=><option key={s}>{s}</option>)}
+              <select className={inputCls} value={f.subject} onChange={e=>set('subject',e.target.value)}>
+                {['Cálculo Diferencial','Física I','Álgebra Lineal','Programación C++','Estadística','Química General'].map(s=><option key={s}>{s}</option>)}
               </select>
             </Field>
-            <Field label="Tema específico"><input className={inputCls} placeholder="Ej: Límites indeterminados" defaultValue="Límites y continuidad"/></Field>
+            <Field label="Tema específico"><input className={inputCls} placeholder="Ej: Límites indeterminados" value={f.topic} onChange={e=>set('topic',e.target.value)}/></Field>
           </div>
           <Field label="Describe tu problema">
-            <textarea rows="4" className={inputCls} defaultValue="No logro resolver límites con la forma indeterminada 0/0. Tengo parcial mañana y quiero entender el método de factorización y L'Hôpital."/>
+            <textarea rows="4" className={inputCls} value={f.desc} onChange={e=>set('desc',e.target.value)}/>
           </Field>
           <div>
             <span className="text-xs font-semibold text-muted mb-1.5 block">Nivel de urgencia</span>
             <div className="grid grid-cols-3 gap-2">
               {[['Baja','gray','Sin afán'],['Media','amber','Esta semana'],['Alta','red','¡Es urgente!']].map(([u,c,d])=>(
-                <button key={u} onClick={()=>setUrg(u)} className={cx('tx p-3 rounded-xl border text-left', urg===u?'border-sap bg-sap-soft':'border-line hover:border-sap/40')}>
+                <button key={u} onClick={()=>set('urgency',u)} className={cx('tx p-3 rounded-xl border text-left', f.urgency===u?'border-sap bg-sap-soft':'border-line hover:border-sap/40')}>
                   <Pill color={c}>{u}</Pill><div className="text-xs text-muted mt-1.5">{d}</div>
                 </button>
               ))}
@@ -376,14 +416,14 @@ function RequestForm() {
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Horario preferido">
-              <select className={inputCls}>{['Hoy 4:00–6:00 PM','Hoy en la noche','Mañana en la mañana','Fin de semana','Flexible'].map(s=><option key={s}>{s}</option>)}</select>
+              <select className={inputCls} value={f.time} onChange={e=>set('time',e.target.value)}>{['Hoy 4:00–6:00 PM','Hoy en la noche','Mañana en la mañana','Fin de semana','Flexible'].map(s=><option key={s}>{s}</option>)}</select>
             </Field>
             <Field label="Modalidad">
-              <select className={inputCls}>{['Chat + pantalla compartida','Solo chat','Videollamada'].map(s=><option key={s}>{s}</option>)}</select>
+              <select className={inputCls} value={f.mode} onChange={e=>set('mode',e.target.value)}>{['Chat + pantalla compartida','Solo chat','Videollamada'].map(s=><option key={s}>{s}</option>)}</select>
             </Field>
           </div>
           <div className="flex gap-3 pt-2">
-            <Btn className="flex-1" onClick={()=>go('matching')}>Enviar solicitud {Ic.arrow}</Btn>
+            <Btn className="flex-1" onClick={submit}>Enviar solicitud {Ic.arrow}</Btn>
             <Btn variant="outline" onClick={()=>go('dash')}>Cancelar</Btn>
           </div>
         </Card>
@@ -404,14 +444,18 @@ function RequestForm() {
 
 /* ----------------------------- Student: Matching ----------------------------- */
 function Matching() {
-  const { go } = useApp();
+  const { go, req, openChatWith, toast } = useApp();
   const [i, setI] = useState(0);
-  const [state, setState] = useState('search'); // search, card, matched
+  const [state, setState] = useState('search'); // search | card | waiting | matched
+  const [skipped, setSkipped] = useState(0);
   const [openProfile, setOpenProfile] = useState(null);
-  useEffect(()=>{ if(state==='search'){ const t=setTimeout(()=>setState('card'),1900); return ()=>clearTimeout(t);} },[state]);
+  useEffect(()=>{ if(state==='search'){ const t=setTimeout(()=>setState('card'),1800); return ()=>clearTimeout(t);} },[state]);
+  useEffect(()=>{ if(state==='waiting'){ const t=setTimeout(()=>setState('matched'),1700); return ()=>clearTimeout(t);} },[state]);
   const m = MENTORS[i];
-  const next = () => { setState('search'); setI((i+1)%MENTORS.length); };
-  const accept = () => setState('matched');
+  const subj = req?.subject || 'Cálculo Diferencial';
+  const topic = req?.topic || 'Límites y continuidad';
+  const next = () => { setState('search'); setSkipped(s=>s+1); setI((i+1)%MENTORS.length); };
+  const accept = () => setState('waiting');
 
   if (state==='search') return (
     <div className="min-h-[70vh] grid place-items-center">
@@ -421,9 +465,20 @@ function Matching() {
           <div className="absolute inset-4 rounded-full bg-sap text-white grid place-items-center text-3xl font-extrabold">U</div>
         </div>
         <h2 className="text-2xl font-extrabold mt-8">Buscando tu mentor ideal…</h2>
-        <p className="text-muted mt-2">Analizando especialidad, disponibilidad y compatibilidad</p>
+        <p className="text-muted mt-2">{subj} · {topic} — analizando especialidad y disponibilidad</p>
         <div className="flex gap-1.5 justify-center mt-5">{[0,1,2].map(d=><span key={d} className="w-2.5 h-2.5 rounded-full bg-sap animate-bounce" style={{animationDelay:`${d*.15}s`}}/>)}</div>
       </div>
+    </div>
+  );
+
+  if (state==='waiting') return (
+    <div className="min-h-[70vh] grid place-items-center">
+      <Card className="max-w-sm w-full p-8 text-center anim-pop">
+        <Avatar src={m.img} size={84} online/>
+        <div className="w-8 h-8 mx-auto mt-5 rounded-full border-2 border-sap border-t-transparent spin"/>
+        <h2 className="text-xl font-extrabold mt-5">Esperando confirmación…</h2>
+        <p className="text-muted text-sm mt-2">Le notificamos a <b className="text-ink">{m.name}</b> tu solicitud de <b className="text-ink">{subj}</b>. Suele responder en {m.resp}.</p>
+      </Card>
     </div>
   );
 
@@ -436,22 +491,22 @@ function Matching() {
           <Avatar src={m.img} size={72}/>
         </div>
         <h2 className="text-2xl font-extrabold">¡Es un match! 🎉</h2>
-        <p className="text-muted mt-2">Tú y <b className="text-ink">{m.name}</b> aceptaron la conexión. Su chat privado de <b className="text-ink">{m.subjects[0]}</b> ya está listo.</p>
-        <Btn className="w-full mt-6" onClick={()=>go('chat')}>{Ic.chat} Abrir chat de mentoría</Btn>
-        <button onClick={next} className="text-muted text-sm mt-3 hover:text-ink">Buscar otro mentor</button>
+        <p className="text-muted mt-2">Tú y <b className="text-ink">{m.name}</b> aceptaron la conexión. Su chat privado de <b className="text-ink">{subj}</b> ya está listo.</p>
+        <Btn className="w-full mt-6" onClick={()=>openChatWith({name:m.name,img:m.img,subject:subj,mentor:m})}>{Ic.chat} Abrir chat de mentoría</Btn>
+        <button onClick={()=>{ toast('Buscando otra opción…','info'); next(); }} className="text-muted text-sm mt-3 hover:text-ink">Buscar otro mentor</button>
       </Card>
     </div>
   );
 
   return (
     <>
-      <PageHead title="Mentores disponibles" sub="Cálculo Diferencial · Límites y continuidad" action={<Pill color="amber">Urgencia media</Pill>}/>
+      <PageHead title="Mentores disponibles" sub={`${subj} · ${topic}`} action={<Pill color={req?.urgency==='Alta'?'red':req?.urgency==='Baja'?'gray':'amber'}>Urgencia {req?.urgency?.toLowerCase()||'media'}</Pill>}/>
       <div className="grid lg:grid-cols-5 gap-5">
         <Card className="lg:col-span-3 p-0 overflow-hidden anim-pop">
           <div className="h-28 bg-gradient-to-r from-sap to-sap-dark relative">
             <span className="absolute top-4 right-4">{m.online?<Pill color="green">● En línea ahora</Pill>:<Pill color="gray">Offline</Pill>}</span>
           </div>
-          <div className="px-7 pb-7 -mt-12">
+          <div className="px-5 sm:px-7 pb-7 -mt-12">
             <Avatar src={m.img} size={96} online={m.online}/>
             <div className="flex items-start justify-between mt-3">
               <div>
@@ -476,7 +531,7 @@ function Matching() {
               <div className="text-xs font-semibold text-muted mb-2">Materias fuertes</div>
               <div className="flex gap-2 flex-wrap">{m.subjects.map(s=><Pill key={s}>{s}</Pill>)}</div>
             </div>
-            <div className="flex gap-3 mt-7">
+            <div className="flex flex-wrap gap-3 mt-7">
               <Btn variant="outline" className="flex-1" onClick={next}>{Ic.swap} Saltar</Btn>
               <Btn variant="ghost" onClick={()=>setOpenProfile(m)}>Ver perfil</Btn>
               <Btn className="flex-1" onClick={accept}>{Ic.check} Aceptar mentor</Btn>
@@ -484,9 +539,9 @@ function Matching() {
           </div>
         </Card>
         <div className="lg:col-span-2 space-y-3">
-          <div className="text-xs font-bold text-muted px-1">SIGUIENTES OPCIONES ({MENTORS.length-1})</div>
+          <div className="text-xs font-bold text-muted px-1 flex justify-between"><span>SIGUIENTES OPCIONES</span><span>{skipped} saltados</span></div>
           {MENTORS.filter((_,x)=>x!==i).map(o=>(
-            <Card key={o.id} className="p-4 flex items-center gap-3 anim-slide hover:border-sap/40 tx cursor-pointer" >
+            <Card key={o.id} className="p-4 flex items-center gap-3 anim-slide hover:border-sap/40 tx cursor-pointer" onClick={()=>setOpenProfile(o)}>
               <Avatar src={o.img} size={44} online={o.online}/>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm truncate">{o.name}</div>
@@ -509,19 +564,19 @@ function Matching() {
 /* ----------------------------- Mentor Profile Modal ----------------------------- */
 function ProfileModal({ m, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm grid place-items-center p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm grid place-items-center p-4 sm:p-6" onClick={onClose}>
       <Card className="max-w-2xl w-full max-h-[88vh] overflow-y-auto p-0 anim-pop" onClick={e=>e.stopPropagation()}>
         <div className="h-32 bg-gradient-to-r from-sap to-sap-dark relative">
           <button onClick={onClose} className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/20 text-white grid place-items-center hover:bg-white/30 tx">{Ic.x}</button>
         </div>
-        <div className="px-8 pb-8 -mt-14">
+        <div className="px-6 sm:px-8 pb-8 -mt-14">
           <Avatar src={m.img} size={108} online={m.online}/>
-          <div className="flex items-start justify-between mt-3">
+          <div className="flex items-start justify-between mt-3 gap-4">
             <div><h2 className="text-2xl font-extrabold">{m.name}</h2><p className="text-muted">{m.career} · {m.sem}</p></div>
-            <div className="text-right"><div className="flex items-center gap-1 justify-end"><Stars n={m.rating} s={18}/></div><div className="text-sm font-bold mt-1">{m.rating} · {m.reviews} reseñas</div></div>
+            <div className="text-right shrink-0"><div className="flex items-center gap-1 justify-end"><Stars n={m.rating} s={18}/></div><div className="text-sm font-bold mt-1">{m.rating} · {m.reviews} reseñas</div></div>
           </div>
           <p className="mt-4 text-ink/80 leading-relaxed">{m.bio}</p>
-          <div className="grid grid-cols-4 gap-3 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
             {[['Carrera',m.career],['Semestre',m.sem],['Horas ayudando',m.hours+'h'],['Rating',m.rating+' ★']].map(([a,b])=>(
               <div key={a} className="rounded-xl bg-bg p-3"><div className="text-[11px] text-muted">{a}</div><div className="font-bold text-sm mt-.5">{b}</div></div>
             ))}
@@ -531,7 +586,7 @@ function ProfileModal({ m, onClose }) {
           </div>
           <div className="mt-6"><h3 className="font-bold mb-3">Historial de mentorías</h3>
             <div className="space-y-2">
-              {SESSIONS.slice(0,3).map(s=>(
+              {SESSIONS0.slice(0,3).map(s=>(
                 <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-line text-sm">
                   <div><div className="font-semibold">{s.subject}</div><div className="text-xs text-muted">con {s.with} · {s.date}</div></div>
                   <div className="flex items-center gap-3"><span className="text-muted text-xs">{s.dur}</span><Stars n={s.rating} s={13}/></div>
@@ -546,56 +601,106 @@ function ProfileModal({ m, onClose }) {
   );
 }
 
+/* ----------------------------- End Session Modal ----------------------------- */
+function EndSessionModal({ peer, dur, onClose, onConfirm }) {
+  const [r, setR] = useState(5);
+  const [note, setNote] = useState('');
+  return (
+    <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <Card className="max-w-md w-full p-7 anim-pop" onClick={e=>e.stopPropagation()}>
+        <h2 className="text-xl font-extrabold">Finalizar sesión</h2>
+        <p className="text-muted text-sm mt-1">Sesión con {peer.name} · {peer.subject} · {dur}</p>
+        <div className="text-center my-6">
+          <div className="text-sm font-semibold text-muted mb-2">¿Cómo estuvo la mentoría?</div>
+          <div className="flex justify-center gap-2">
+            {[1,2,3,4,5].map(i=>(
+              <button key={i} onClick={()=>setR(i)} className={cx('tx', i<=r?'text-amber-400':'text-gray-300 hover:text-amber-200')}>
+                {React.cloneElement(Ic.star,{s:34})}
+              </button>
+            ))}
+          </div>
+        </div>
+        <Field label="Comentario (opcional)">
+          <textarea rows="3" className={inputCls} placeholder="¿Qué te ayudó más?" value={note} onChange={e=>setNote(e.target.value)}/>
+        </Field>
+        <div className="flex gap-3 mt-5">
+          <Btn variant="outline" className="flex-1" onClick={onClose}>Seguir en sesión</Btn>
+          <Btn variant="success" className="flex-1" onClick={()=>onConfirm(r)}>{Ic.check} Finalizar y valorar</Btn>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 /* ----------------------------- Chat ----------------------------- */
 function Chat() {
-  const { go } = useApp();
-  const m = MENTORS[0];
+  const { go, peer, addSession, toast, role } = useApp();
+  const p = peer || { name:'Valentina Rojas', img:AV(47), subject:'Cálculo Diferencial' };
   const [msgs, setMsgs] = useState([
-    { me:false, t:'¡Hola Juan! Vi que necesitas ayuda con límites indeterminados. ¿Tienes el ejercicio a la mano? 😊', ts:'4:01 PM' },
-    { me:true, t:'¡Hola Valentina! Sí, es el límite de (x²-4)/(x-2) cuando x→2', ts:'4:02 PM' },
-    { me:false, t:'Perfecto. Eso da 0/0, así que factorizamos el numerador: x²-4 = (x-2)(x+2). Te comparto pantalla y lo vemos paso a paso.', ts:'4:03 PM' },
-    { me:true, t:'¡Ahí sí lo veo! Entonces se cancela (x-2) y queda x+2 → 4', ts:'4:05 PM' },
-    { me:false, t:'¡Exacto! 🎉 Ese es el método de factorización. Ahora hagamos uno con L\'Hôpital para que compares.', ts:'4:06 PM' },
+    { who:'them', t:`¡Hola! Vi que necesitas ayuda con ${p.subject}. ¿Tienes el ejercicio a la mano? 😊`, ts:'4:01 PM' },
+    { who:'me', t:'¡Hola! Sí, es el límite de (x²-4)/(x-2) cuando x→2', ts:'4:02 PM' },
+    { who:'them', t:'Perfecto. Eso da 0/0, así que factorizamos el numerador: x²-4 = (x-2)(x+2). Te comparto pantalla y lo vemos paso a paso.', ts:'4:03 PM' },
+    { who:'me', t:'¡Ahí sí lo veo! Entonces se cancela (x-2) y queda x+2 → 4', ts:'4:05 PM' },
+    { who:'them', t:'¡Exacto! 🎉 Ese es el método de factorización. Ahora hagamos uno con L\'Hôpital para que compares.', ts:'4:06 PM' },
   ]);
   const [val, setVal] = useState('');
   const [time, setTime] = useState(372);
+  const [sharing, setSharing] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const fileRef = useRef();
   const endRef = useRef();
   useEffect(()=>{ const t=setInterval(()=>setTime(s=>s+1),1000); return ()=>clearInterval(t); },[]);
   useEffect(()=>{ endRef.current?.scrollIntoView({behavior:'smooth'}); },[msgs]);
-  const send = () => { if(!val.trim())return; setMsgs([...msgs,{me:true,t:val,ts:'4:08 PM'}]); setVal(''); };
+  const now = () => new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+  const send = () => { if(!val.trim())return; setMsgs(m=>[...m,{who:'me',t:val,ts:now()}]); setVal('');
+    setTimeout(()=>setMsgs(m=>[...m,{who:'them',t:'¡Buena pregunta! Déjame mostrarte con un ejemplo.',ts:now()}]),1200); };
+  const onFile = e => { const file=e.target.files?.[0]; if(!file)return;
+    setMsgs(m=>[...m,{who:'me',file:file.name,ts:now()}]); toast('Archivo compartido en el chat'); e.target.value=''; };
+  const toggleShare = () => { setSharing(s=>!s); toast(sharing?'Dejaste de compartir pantalla':'Compartiendo pantalla','info'); };
+  const finish = (rating) => {
+    const mm=Math.floor(time/60), dur = mm>=60?`${Math.floor(mm/60)}h ${mm%60}min`:`${mm} min`;
+    addSession({ with:p.name, subject:p.subject, date:'18 May 2026', dur, rating, status:'Completada' });
+    toast('Sesión finalizada y guardada en tu historial');
+    go('history');
+  };
   const mm = String(Math.floor(time/60)).padStart(2,'0'), ss = String(time%60).padStart(2,'0');
   return (
-    <div className="-m-7 h-[calc(100vh-4rem)] flex">
+    <div className="-m-4 sm:-m-7 h-[calc(100vh-4rem)] flex">
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="h-16 bg-white border-b border-line flex items-center justify-between px-6">
+        <div className="min-h-16 py-2 bg-white border-b border-line flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <button onClick={()=>go('matching')} className="text-muted hover:text-ink tx">{Ic.back}</button>
-            <Avatar src={m.img} size={42} online/>
-            <div><div className="font-bold leading-none">{m.name}</div><div className="text-xs text-emerald-600 mt-1 font-medium">● En línea · {m.subjects[0]}</div></div>
+            <button onClick={()=>go(role==='mentor'?'mrequests':'matching')} className="text-muted hover:text-ink tx">{Ic.back}</button>
+            <Avatar src={p.img} size={42} online/>
+            <div><div className="font-bold leading-none">{p.name}</div><div className="text-xs text-emerald-600 mt-1 font-medium">● En línea · {p.subject}</div></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-1.5 rounded-xl bg-sap-light text-sap text-sm font-bold flex items-center gap-1.5">{React.cloneElement(Ic.clock,{s:15})} {mm}:{ss}</span>
-            <Btn variant="outline" className="!px-3">{React.cloneElement(Ic.screen,{s:16})} Compartir pantalla</Btn>
-            <Btn variant="danger" className="!px-3" onClick={()=>go('history')}>{React.cloneElement(Ic.phoneOff,{s:16})} Finalizar</Btn>
+            <Btn variant={sharing?'success':'outline'} className="!px-3" onClick={toggleShare}>{React.cloneElement(Ic.screen,{s:16})} <span className="hidden sm:inline">{sharing?'Compartiendo':'Pantalla'}</span></Btn>
+            <Btn variant="danger" className="!px-3" onClick={()=>setEnding(true)}>{React.cloneElement(Ic.phoneOff,{s:16})} <span className="hidden sm:inline">Finalizar</span></Btn>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-bg">
+        {sharing && <div className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-6 py-2 flex items-center gap-2 border-b border-emerald-100">{React.cloneElement(Ic.screen,{s:14})} Estás compartiendo tu pantalla con {p.name.split(' ')[0]}</div>}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-bg">
           <div className="text-center"><span className="text-xs text-muted bg-white px-3 py-1 rounded-full border border-line">Sesión iniciada · Hoy 4:00 PM</span></div>
           {msgs.map((x,i)=>(
-            <div key={i} className={cx('flex anim-fade', x.me?'justify-end':'justify-start')}>
-              <div className="flex items-end gap-2 max-w-[70%]">
-                {!x.me && <Avatar src={m.img} size={28}/>}
+            <div key={i} className={cx('flex anim-fade', x.who==='me'?'justify-end':'justify-start')}>
+              <div className="flex items-end gap-2 max-w-[78%]">
+                {x.who==='them' && <Avatar src={p.img} size={28}/>}
                 <div>
-                  <div className={cx('px-4 py-2.5 rounded-2xl text-sm leading-relaxed', x.me?'bg-sap text-white rounded-br-md':'bg-white border border-line rounded-bl-md')}>{x.t}</div>
-                  <div className={cx('text-[10px] text-muted mt-1', x.me?'text-right':'')}>{x.ts}</div>
+                  {x.file
+                    ? <div className={cx('px-4 py-3 rounded-2xl text-sm flex items-center gap-2.5', x.who==='me'?'bg-sap text-white rounded-br-md':'bg-white border border-line rounded-bl-md')}>
+                        {React.cloneElement(Ic.file,{s:18})}<span className="font-semibold">{x.file}</span></div>
+                    : <div className={cx('px-4 py-2.5 rounded-2xl text-sm leading-relaxed', x.who==='me'?'bg-sap text-white rounded-br-md':'bg-white border border-line rounded-bl-md')}>{x.t}</div>}
+                  <div className={cx('text-[10px] text-muted mt-1', x.who==='me'?'text-right':'')}>{x.ts}</div>
                 </div>
               </div>
             </div>
           ))}
           <div ref={endRef}/>
         </div>
-        <div className="bg-white border-t border-line p-4 flex items-center gap-2">
-          <button className="w-10 h-10 rounded-xl hover:bg-bg text-muted grid place-items-center tx" title="Adjuntar archivo">{Ic.paperclip}</button>
+        <div className="bg-white border-t border-line p-3 sm:p-4 flex items-center gap-2">
+          <input type="file" ref={fileRef} onChange={onFile} className="hidden"/>
+          <button onClick={()=>fileRef.current.click()} className="w-10 h-10 rounded-xl hover:bg-bg text-muted grid place-items-center tx" title="Adjuntar archivo">{Ic.paperclip}</button>
           <input value={val} onChange={e=>setVal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Escribe un mensaje…" className="flex-1 px-4 py-2.5 rounded-xl bg-bg border border-transparent focus:bg-white focus:border-sap outline-none text-sm tx"/>
           <Btn onClick={send} className="!px-4">{Ic.send}</Btn>
         </div>
@@ -603,7 +708,7 @@ function Chat() {
       <aside className="w-80 bg-white border-l border-line p-5 overflow-y-auto hidden xl:block">
         <h3 className="font-bold mb-4">Panel de sesión</h3>
         <div className="rounded-xl bg-sap-soft border border-sap/15 p-4 mb-5">
-          <div className="text-xs text-muted">Materia</div><div className="font-bold">{m.subjects[0]}</div>
+          <div className="text-xs text-muted">Materia</div><div className="font-bold">{p.subject}</div>
           <div className="text-xs text-muted mt-2">Duración</div><div className="font-bold">{mm}:{ss} min</div>
         </div>
         {[
@@ -618,8 +723,8 @@ function Chat() {
             </div>
           </div>
         ))}
-        <Btn variant="soft" className="w-full">Ver perfil de {m.name.split(' ')[0]}</Btn>
       </aside>
+      {ending && <EndSessionModal peer={p} dur={`${mm}:${ss} min`} onClose={()=>setEnding(false)} onConfirm={finish}/>}
     </div>
   );
 }
@@ -661,7 +766,10 @@ function StudentProfile() {
 
 /* ----------------------------- Mentor Dashboard ----------------------------- */
 function MentorDash() {
-  const { go } = useApp();
+  const { go, openChatWith, toast } = useApp();
+  const [reqs, setReqs] = useState(REQ0.slice(0,3));
+  const accept = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); openChatWith({name:r.name,img:r.img,subject:r.subject}); };
+  const reject = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); toast(`Solicitud de ${r.name} rechazada`,'info'); };
   return (
     <>
       <PageHead title="Hola, Valentina ✨" sub="Tu impacto en la comunidad universitaria." action={<Btn onClick={()=>go('mrequests')}>{Ic.inbox} Ver solicitudes</Btn>}/>
@@ -675,21 +783,22 @@ function MentorDash() {
         <Card className="lg:col-span-2 p-6 anim-fade">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold">Solicitudes entrantes</h3>
-            <Pill color="red">{REQUESTS.length} nuevas</Pill>
+            <Pill color={reqs.length?'red':'gray'}>{reqs.length} {reqs.length===1?'nueva':'nuevas'}</Pill>
           </div>
           <div className="space-y-3">
-            {REQUESTS.map(r=>(
-              <div key={r.id} className="flex items-center gap-4 p-4 rounded-xl border border-line hover:border-sap/40 tx anim-slide">
+            {reqs.length===0 && <div className="text-center py-10 text-muted text-sm">No hay solicitudes pendientes. ¡Buen trabajo! 🎉</div>}
+            {reqs.map(r=>(
+              <div key={r.id} className="flex flex-wrap items-center gap-4 p-4 rounded-xl border border-line hover:border-sap/40 tx anim-slide">
                 <Avatar src={r.img} size={46}/>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-[140px]">
                   <div className="flex items-center gap-2"><span className="font-bold text-sm">{r.name}</span><Pill color="gray">{r.sem}</Pill></div>
                   <div className="text-sm text-ink/70 mt-.5">{r.subject} — {r.topic}</div>
                   <div className="text-[11px] text-muted mt-1">{r.ago}</div>
                 </div>
                 <Pill color={r.urgency==='Alta'?'red':r.urgency==='Media'?'amber':'gray'}>{r.urgency}</Pill>
                 <div className="flex gap-2">
-                  <Btn variant="outline" className="!px-3 !py-2" >{Ic.x}</Btn>
-                  <Btn variant="success" className="!px-3 !py-2" onClick={()=>go('chat')}>{Ic.check} Aceptar</Btn>
+                  <Btn variant="outline" className="!px-3 !py-2" onClick={()=>reject(r)}>{Ic.x}</Btn>
+                  <Btn variant="success" className="!px-3 !py-2" onClick={()=>accept(r)}>{Ic.check} Aceptar</Btn>
                 </div>
               </div>
             ))}
@@ -700,7 +809,7 @@ function MentorDash() {
             <h3 className="font-bold mb-3">Sesión activa</h3>
             <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
               <div className="flex items-center gap-3"><Avatar src={AV(60)} size={42} online/><div><div className="font-bold text-sm">Juan Pérez</div><div className="text-xs text-muted">Cálculo · 06:12 min</div></div></div>
-              <Btn className="w-full mt-3" onClick={()=>go('chat')}>{Ic.chat} Continuar</Btn>
+              <Btn className="w-full mt-3" onClick={()=>openChatWith({name:'Juan Pérez',img:AV(60),subject:'Cálculo Diferencial'})}>{Ic.chat} Continuar</Btn>
             </div>
           </Card>
           <Card className="p-6 anim-fade">
@@ -717,27 +826,32 @@ function MentorDash() {
 
 /* ----------------------------- Mentor Requests ----------------------------- */
 function MentorRequests() {
-  const { go } = useApp();
+  const { openChatWith, toast } = useApp();
+  const [reqs, setReqs] = useState(REQ0);
+  const accept = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); openChatWith({name:r.name,img:r.img,subject:r.subject}); };
+  const reject = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); toast(`Rechazaste la solicitud de ${r.name}`,'info'); };
   return (
     <>
       <PageHead title="Solicitudes en tiempo real" sub="Acepta las que dominas. Cada mentoría suma horas y puntos." action={<Pill color="green">● Disponible</Pill>}/>
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {[...REQUESTS,...REQUESTS.map(r=>({...r,id:r.id+10,ago:'hace '+(r.id*7)+' min'}))].map(r=>(
-          <Card key={r.id} className="p-5 anim-fade hover:shadow-float tx">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3"><Avatar src={r.img} size={44}/><div><div className="font-bold text-sm">{r.name}</div><div className="text-xs text-muted">{r.sem}</div></div></div>
-              <Pill color={r.urgency==='Alta'?'red':r.urgency==='Media'?'amber':'gray'}>{r.urgency}</Pill>
-            </div>
-            <div className="mt-4"><div className="font-bold text-sm text-sap">{r.subject}</div><div className="text-sm text-muted">{r.topic}</div></div>
-            <p className="text-sm text-ink/70 mt-2 leading-relaxed line-clamp-2">{r.desc}</p>
-            <div className="text-[11px] text-muted mt-3 flex items-center gap-1.5">{React.cloneElement(Ic.clock,{s:13})} {r.ago}</div>
-            <div className="flex gap-2 mt-4">
-              <Btn variant="outline" className="flex-1">{Ic.x} Rechazar</Btn>
-              <Btn variant="success" className="flex-1" onClick={()=>go('chat')}>{Ic.check} Aceptar</Btn>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {reqs.length===0
+        ? <Card className="p-16 text-center anim-fade"><div className="text-4xl mb-3">🎉</div><div className="font-bold">Estás al día</div><p className="text-muted text-sm mt-1">No hay solicitudes pendientes. Te avisaremos cuando llegue una nueva.</p></Card>
+        : <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {reqs.map(r=>(
+            <Card key={r.id} className="p-5 anim-fade hover:shadow-float tx">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3"><Avatar src={r.img} size={44}/><div><div className="font-bold text-sm">{r.name}</div><div className="text-xs text-muted">{r.sem}</div></div></div>
+                <Pill color={r.urgency==='Alta'?'red':r.urgency==='Media'?'amber':'gray'}>{r.urgency}</Pill>
+              </div>
+              <div className="mt-4"><div className="font-bold text-sm text-sap">{r.subject}</div><div className="text-sm text-muted">{r.topic}</div></div>
+              <p className="text-sm text-ink/70 mt-2 leading-relaxed">{r.desc}</p>
+              <div className="text-[11px] text-muted mt-3 flex items-center gap-1.5">{React.cloneElement(Ic.clock,{s:13})} {r.ago}</div>
+              <div className="flex gap-2 mt-4">
+                <Btn variant="outline" className="flex-1" onClick={()=>reject(r)}>{Ic.x} Rechazar</Btn>
+                <Btn variant="success" className="flex-1" onClick={()=>accept(r)}>{Ic.check} Aceptar</Btn>
+              </div>
+            </Card>
+          ))}
+        </div>}
     </>
   );
 }
@@ -782,7 +896,7 @@ function Incentives() {
             <div key={r.id} className={cx('rounded-xl border p-4 flex gap-4 tx', r.done?'border-emerald-200 bg-emerald-50/50':'border-line')}>
               <span className={cx('w-12 h-12 rounded-xl grid place-items-center shrink-0', r.done?'bg-emerald-500 text-white':'bg-sap-light text-sap')}>{React.cloneElement(r.ic,{s:22})}</span>
               <div className="flex-1">
-                <div className="flex items-center justify-between"><div className="font-bold text-sm">{r.t}</div>{r.done?<Pill color="green">Desbloqueado</Pill>:<Pill color="gray">{r.need}h</Pill>}</div>
+                <div className="flex items-center justify-between gap-2"><div className="font-bold text-sm">{r.t}</div>{r.done?<Pill color="green">Desbloqueado</Pill>:<Pill color="gray">{r.need}h</Pill>}</div>
                 <div className="text-xs text-muted mt-.5">{r.d}</div>
                 {!r.done && <div className="mt-2"><Progress v={142} max={r.need}/></div>}
               </div>
@@ -796,24 +910,26 @@ function Incentives() {
 
 /* ----------------------------- History ----------------------------- */
 function History() {
+  const { sessions } = useApp();
+  const all = [...sessions, ...SESSIONS0];
   return (
     <>
       <PageHead title="Historial de mentorías" sub="Todas tus sesiones de acompañamiento." action={<Btn variant="outline">{Ic.cal} Filtrar</Btn>}/>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Stat ic={Ic.check} label="Sesiones totales" value="64"/>
+        <Stat ic={Ic.check} label="Sesiones totales" value={all.length}/>
         <Stat ic={Ic.clock} label="Tiempo total" value="142h"/>
         <Stat ic={Ic.star} label="Rating promedio" value="4.9"/>
         <Stat ic={Ic.user} label="Estudiantes únicos" value="48"/>
       </div>
-      <Card className="anim-fade overflow-hidden">
-        <table className="w-full text-sm">
+      <Card className="anim-fade overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-bg text-muted text-xs uppercase"><tr>
             {['Estudiante','Materia','Fecha','Duración','Valoración','Estado'].map(h=><th key={h} className="text-left font-bold px-5 py-3">{h}</th>)}
           </tr></thead>
           <tbody>
-            {[...SESSIONS,...SESSIONS.map(s=>({...s,id:s.id+10,date:'0'+s.id+' May 2026'}))].map(s=>(
-              <tr key={s.id} className="border-t border-line hover:bg-bg tx">
-                <td className="px-5 py-4"><div className="flex items-center gap-3"><Avatar src={AV(s.id*5+10)} size={34}/><span className="font-semibold">{s.with}</span></div></td>
+            {all.map((s,idx)=>(
+              <tr key={s.id??idx} className={cx('border-t border-line hover:bg-bg tx', idx<sessions.length && 'bg-sap-soft/40')}>
+                <td className="px-5 py-4"><div className="flex items-center gap-3"><Avatar src={AV((idx*7+11)%70)} size={34}/><span className="font-semibold">{s.with}</span></div></td>
                 <td className="px-5 py-4 text-muted">{s.subject}</td>
                 <td className="px-5 py-4 text-muted">{s.date}</td>
                 <td className="px-5 py-4 text-muted">{s.dur}</td>
@@ -830,16 +946,19 @@ function History() {
 
 /* ----------------------------- Availability ----------------------------- */
 function Availability() {
-  const [days,setDays] = useState({Lun:true,Mar:true,Mie:false,Jue:true,Vie:true,Sab:false,Dom:false});
+  const { toast } = useApp();
+  const [days,setDays] = useState({Lun:true,Mar:true,Mié:false,Jue:true,Vie:true,Sáb:false,Dom:false});
   const [on,setOn] = useState(true);
+  const [subjects,setSubjects] = useState(['Cálculo Diferencial','Álgebra Lineal','Física I']);
+  const pool = ['Física II','Programación C++','Estadística','Ecuaciones Diferenciales'];
   return (
     <>
       <PageHead title="Disponibilidad" sub="Controla cuándo recibes solicitudes de mentoría."/>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 p-6 anim-fade">
           <div className="flex items-center justify-between p-4 rounded-xl bg-sap-soft border border-sap/15 mb-6">
-            <div><div className="font-bold">Estado de mentor</div><div className="text-sm text-muted">{on?'Recibiendo solicitudes':'Pausado'}</div></div>
-            <button onClick={()=>setOn(!on)} className={cx('w-14 h-8 rounded-full tx relative', on?'bg-emerald-500':'bg-gray-300')}>
+            <div><div className="font-bold">Estado de mentor</div><div className="text-sm text-muted">{on?'Recibiendo solicitudes':'Pausado — no recibes solicitudes'}</div></div>
+            <button onClick={()=>{setOn(!on);toast(!on?'Ahora estás disponible':'Disponibilidad pausada','info');}} className={cx('w-14 h-8 rounded-full tx relative', on?'bg-emerald-500':'bg-gray-300')}>
               <span className={cx('absolute top-1 w-6 h-6 rounded-full bg-white tx shadow', on?'left-7':'left-1')}/>
             </button>
           </div>
@@ -854,16 +973,23 @@ function Availability() {
             <Field label="Desde"><input type="time" defaultValue="16:00" className={inputCls}/></Field>
             <Field label="Hasta"><input type="time" defaultValue="21:00" className={inputCls}/></Field>
           </div>
-          <Btn className="mt-6">{Ic.check} Guardar disponibilidad</Btn>
+          <Btn className="mt-6" onClick={()=>toast('Disponibilidad guardada')}>{Ic.check} Guardar disponibilidad</Btn>
         </Card>
         <Card className="p-6 anim-fade h-fit">
           <h3 className="font-bold mb-3">Materias que enseñas</h3>
           <div className="flex flex-wrap gap-2">
-            {['Cálculo Diferencial','Álgebra Lineal','Física I','Física II','Programación C++','Estadística'].map((s,i)=>(
-              <span key={s} className={cx('px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5', i<3?'bg-sap text-white':'bg-bg text-muted')}>{s}{i<3&&React.cloneElement(Ic.x,{s:12})}</span>
+            {subjects.map(s=>(
+              <button key={s} onClick={()=>setSubjects(x=>x.filter(i=>i!==s))} className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-sap text-white tx">{s}{React.cloneElement(Ic.x,{s:12})}</button>
             ))}
           </div>
-          <Btn variant="outline" className="w-full mt-4">{Ic.plus} Añadir materia</Btn>
+          {subjects.length<7 && <div className="mt-4">
+            <div className="text-xs font-semibold text-muted mb-2">Sugeridas</div>
+            <div className="flex flex-wrap gap-2">
+              {pool.filter(p=>!subjects.includes(p)).map(p=>(
+                <button key={p} onClick={()=>setSubjects(x=>[...x,p])} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-bg text-muted hover:bg-sap-light hover:text-sap tx flex items-center gap-1.5">{React.cloneElement(Ic.plus,{s:12})}{p}</button>
+              ))}
+            </div>
+          </div>}
           <div className="mt-6 rounded-xl bg-amber-50 p-4 text-amber-700 text-xs">Mientras más materias y horas, más puntos y recompensas acumulas.</div>
         </Card>
       </div>
@@ -873,17 +999,17 @@ function Availability() {
 
 /* ----------------------------- Settings ----------------------------- */
 function Settings() {
-  const { role } = useApp();
+  const { role, toast, logout } = useApp();
   const me = role==='student' ? {n:'Juan Pérez',c:'Ing. de Sistemas — 2º semestre',img:AV(60)} : {n:'Valentina Rojas',c:'Ing. de Sistemas — 8º semestre',img:AV(47)};
   return (
     <>
       <PageHead title="Configuración de perfil" sub="Administra tu información y preferencias."/>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 p-6 anim-fade space-y-4">
-          <div className="flex items-center gap-4 pb-5 border-b border-line">
+          <div className="flex flex-wrap items-center gap-4 pb-5 border-b border-line">
             <Avatar src={me.img} size={72}/>
             <div><div className="font-bold">{me.n}</div><div className="text-sm text-muted">{me.c}</div></div>
-            <Btn variant="outline" className="ml-auto">Cambiar foto</Btn>
+            <Btn variant="outline" className="ml-auto" onClick={()=>toast('Función de foto disponible en producción','info')}>Cambiar foto</Btn>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Nombre"><input className={inputCls} defaultValue={me.n}/></Field>
@@ -892,7 +1018,7 @@ function Settings() {
             <Field label="Semestre"><input className={inputCls} defaultValue={role==='student'?'2':'8'}/></Field>
           </div>
           <Field label="Sobre mí"><textarea rows="3" className={inputCls} defaultValue="Apasionado por aprender y ayudar a otros a lograr su mejor versión académica."/></Field>
-          <Btn>{Ic.check} Guardar cambios</Btn>
+          <Btn onClick={()=>toast('Cambios guardados correctamente')}>{Ic.check} Guardar cambios</Btn>
         </Card>
         <Card className="p-6 anim-fade h-fit">
           <h3 className="font-bold mb-4">Preferencias</h3>
@@ -902,7 +1028,7 @@ function Settings() {
               <Toggle def={d}/>
             </div>
           ))}
-          <Btn variant="danger" className="w-full mt-6">{Ic.logout} Cerrar todas las sesiones</Btn>
+          <Btn variant="danger" className="w-full mt-6" onClick={logout}>{Ic.logout} Cerrar sesión</Btn>
         </Card>
       </div>
     </>
@@ -918,13 +1044,26 @@ function Root() {
   const [auth, setAuth] = useState(false);
   const [role, setRole] = useState('student');
   const [screen, setScreen] = useState('dash');
-  const ctx = {
-    role, screen,
-    login:(r)=>{ setRole(r); setScreen(r==='student'?'dash':'mdash'); setAuth(true); },
-    logout:()=>{ setAuth(false); },
-    go:setScreen,
+  const [req, setReq] = useState(null);
+  const [peer, setPeer] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [toasts, setToasts] = useState([]);
+  const toast = (msg, type='success') => {
+    const id = Date.now()+Math.random();
+    setToasts(t=>[...t,{id,msg,type}]);
+    setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3400);
   };
-  if (!auth) return <App.Provider value={ctx}><Auth/></App.Provider>;
+  const ctx = {
+    role, screen, req, peer, sessions,
+    login:(r)=>{ setRole(r); setScreen(r==='student'?'dash':'mdash'); setAuth(true); },
+    logout:()=>{ setAuth(false); setReq(null); setPeer(null); setSessions([]); setScreen('dash'); },
+    go:setScreen,
+    setReq,
+    openChatWith:(p)=>{ setPeer(p); setScreen('chat'); },
+    addSession:(s)=>setSessions(x=>[{...s,id:Date.now()},...x]),
+    toast,
+  };
+  if (!auth) return <App.Provider value={ctx}><Auth/><Toasts items={toasts}/></App.Provider>;
   const screens = {
     dash:<StudentDash/>, request:<RequestForm/>, matching:<Matching/>, chat:<Chat/>,
     history:<History/>, profile:<StudentProfile/>, settings:<Settings/>,
@@ -932,7 +1071,8 @@ function Root() {
   };
   return (
     <App.Provider value={ctx}>
-      <Shell>{screens[screen] || <StudentDash/>}</Shell>
+      <Shell>{screens[screen] || (role==='student'?<StudentDash/>:<MentorDash/>)}</Shell>
+      <Toasts items={toasts}/>
     </App.Provider>
   );
 }
