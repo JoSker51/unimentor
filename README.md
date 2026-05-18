@@ -10,10 +10,35 @@ No requiere instalar nada ni compilar.
 
 ---
 
+## 0. Requisitos previos (qué necesitas de base)
+
+**Solo necesitas dos cosas:**
+
+1. Un **navegador web moderno**: Google Chrome, Microsoft Edge o Firefox
+   (cualquiera reciente sirve; viene preinstalado en casi todos los PC).
+2. **Conexión a internet** la primera vez que lo abras.
+
+**NO necesitas nada de lo siguiente:**
+
+- ❌ **Python** — no se usa (solo aparece como opción *opcional* en el punto C
+  para servir la carpeta; no es obligatorio).
+- ❌ **Node.js / npm** — no hay que instalar paquetes.
+- ❌ **`npm install` ni descargar librerías** — las librerías que usa
+  (React, Tailwind, Babel) **se cargan solas desde internet** mediante CDN
+  cuando abres la página. Por eso se necesita internet la primera vez.
+- ❌ **Compilar o "buildear"** — el navegador ejecuta todo directamente.
+- ❌ Editores, frameworks o configuración previa.
+
+> En resumen: si tienes un navegador e internet, ya puedes ejecutarlo.
+> Una vez cargado en el navegador, funciona aunque pierdas la conexión.
+
+---
+
 ## 1. Cómo ejecutarlo
 
 No se necesita Node, Python ni programas. Solo un navegador
-(Chrome / Edge / Firefox) e internet (la primera vez, para cargar los estilos).
+(Chrome / Edge / Firefox) e internet (la primera vez, para cargar las
+librerías y los estilos desde la web).
 
 ### Opción A — Descargar y abrir (la más fácil)
 
@@ -34,7 +59,8 @@ No se necesita Node, Python ni programas. Solo un navegador
 ```bash
 git clone https://github.com/JoSker51/unimentor.git
 cd unimentor
-# Abre index.html con doble clic, o sirve la carpeta:
+# Lo más simple: abre index.html con doble clic.
+# OPCIONAL (no obligatorio): si tienes Python y prefieres un servidor local:
 python -m http.server 8000   # luego abre http://localhost:8000
 ```
 
