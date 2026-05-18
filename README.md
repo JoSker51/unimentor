@@ -10,7 +10,7 @@ No requiere instalar nada ni compilar.
 
 ---
 
-## 1. Cómo ejecutarlo (para alguien que no sabe nada del tema)
+## 1. Cómo ejecutarlo
 
 No se necesita Node, Python ni programas. Solo un navegador
 (Chrome / Edge / Firefox) e internet (la primera vez, para cargar los estilos).
