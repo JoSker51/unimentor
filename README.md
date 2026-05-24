@@ -185,7 +185,19 @@ Solicitudes en tiempo real · Sistema de incentivos · Historial · Disponibilid
 
 ---
 
-## 6. Tecnología
+## 6. Preparado para backend real
+
+El código tiene una **capa `api`** centralizada (ver `API LAYER` en
+`index.html`). Hoy devuelve datos mock con latencia simulada; toda la
+UI ya es **async-ready**. El día que toque conectar un backend real,
+solo se cambia el interruptor `USE_REAL_API = true` y se reemplaza el
+cuerpo de cada función — **ningún componente de la UI se modifica**.
+
+Plan paso a paso, tablas y endpoints sugeridos: ver **[`ROADMAP.md`](ROADMAP.md)**.
+
+---
+
+## 7. Tecnología
 
 - **React 18** (vía CDN) — componentes y estado.
 - **Tailwind CSS** (vía CDN) — estilos utilitarios.

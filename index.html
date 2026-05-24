@@ -155,6 +155,130 @@ const REWARDS = [
   { id:4, t:'Beca parcial matrícula', d:'5% descuento próximo semestre — premio institucional', need:150, ic:Ic.trophy, done:false, gold:true },
 ];
 
+/* ============================================================
+ *  API LAYER — punto único para conectar el backend real
+ *  ------------------------------------------------------------
+ *  HOY  (USE_REAL_API=false): devuelve datos mock con latencia
+ *       simulada para que la UI ya sea 100% async-ready.
+ *  MAÑANA (USE_REAL_API=true): cada función llama al endpoint
+ *       real. Ningún componente de la UI necesita cambiarse.
+ *
+ *  Mapa función → endpoint sugerido → tabla en DB
+ *    login            POST /auth/login          users
+ *    register         POST /auth/register       users
+ *    createRequest    POST /requests            requests
+ *    searchMentors    GET  /mentors?subject=…   users (role=mentor)
+ *    getMentorProfile GET  /mentors/:id         users
+ *    getMentorReviews GET  /mentors/:id/reviews reviews
+ *    acceptMentor     POST /matches             matches
+ *    mentorAccept     POST /requests/:id/accept matches
+ *    mentorReject     POST /requests/:id/reject requests
+ *    sendMessage      POST /chats/:id/messages  messages
+ *    uploadFile       POST /chats/:id/files     attachments
+ *    endSession       POST /sessions            sessions
+ *    submitReview     POST /reviews             reviews
+ *    submitReport     POST /reports             reports
+ *    setAvailability  PUT  /me/availability     availability
+ *    updateProfile    PUT  /me                  users
+ * ============================================================ */
+const USE_REAL_API = false;
+const API_BASE     = '/api';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const http = async (path, opts={}) => {
+  const r = await fetch(`${API_BASE}${path}`, { headers:{'Content-Type':'application/json'}, credentials:'include', ...opts });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+};
+
+const api = {
+  // ── Auth ─────────────────────────────────────────────────
+  async login({ role, email, password }) {
+    if (USE_REAL_API) return http('/auth/login', { method:'POST', body:JSON.stringify({email,password})});
+    await sleep(300);
+    return role==='student'
+      ? { id:1,  role, name:'Juan Pérez',       career:'Ing. de Sistemas', sem:2 }
+      : { id:47, role, name:'Valentina Rojas',  career:'Ing. de Sistemas', sem:8 };
+  },
+  async register(payload){
+    if (USE_REAL_API) return http('/auth/register',{method:'POST',body:JSON.stringify(payload)});
+    await sleep(350); return { id:Date.now(), ...payload };
+  },
+
+  // ── Requests / Matching ──────────────────────────────────
+  async createRequest(payload){
+    if (USE_REAL_API) return http('/requests',{method:'POST',body:JSON.stringify(payload)});
+    await sleep(350); return { id:Date.now(), createdAt:new Date().toISOString(), status:'searching', ...payload };
+  },
+  async searchMentors({ subject } = {}){
+    if (USE_REAL_API) return http(`/mentors?subject=${encodeURIComponent(subject||'')}`);
+    await sleep(500); return MENTORS;
+  },
+  async getMentorProfile(id){
+    if (USE_REAL_API) return http(`/mentors/${id}`);
+    await sleep(200); return MENTORS.find(m=>m.id===id);
+  },
+  async getMentorReviews(id){
+    if (USE_REAL_API) return http(`/mentors/${id}/reviews`);
+    await sleep(200); return REVIEWS[id] || [];
+  },
+  async acceptMentor({ mentorId, requestId }){
+    if (USE_REAL_API) return http('/matches',{method:'POST',body:JSON.stringify({mentorId,requestId})});
+    await sleep(450); return { matchId:Date.now(), chatId:Date.now() };
+  },
+  async mentorAccept(requestId){
+    if (USE_REAL_API) return http(`/requests/${requestId}/accept`,{method:'POST'});
+    await sleep(300); return { ok:true, chatId:Date.now() };
+  },
+  async mentorReject(requestId, reason){
+    if (USE_REAL_API) return http(`/requests/${requestId}/reject`,{method:'POST',body:JSON.stringify({reason})});
+    await sleep(200); return { ok:true };
+  },
+
+  // ── Chat ─────────────────────────────────────────────────
+  async sendMessage({ chatId, text }){
+    if (USE_REAL_API) return http(`/chats/${chatId}/messages`,{method:'POST',body:JSON.stringify({text})});
+    await sleep(80); return { id:Date.now(), text, ts:Date.now() };
+  },
+  async uploadFile({ chatId, file }){
+    if (USE_REAL_API){
+      const fd = new FormData(); fd.append('file', file);
+      return fetch(`${API_BASE}/chats/${chatId}/files`,{method:'POST',body:fd,credentials:'include'}).then(r=>r.json());
+    }
+    await sleep(400); return { url:URL.createObjectURL(file), name:file.name, size:file.size };
+  },
+
+  // ── Sessions / Reviews ───────────────────────────────────
+  async endSession(payload){
+    if (USE_REAL_API) return http('/sessions',{method:'POST',body:JSON.stringify(payload)});
+    await sleep(400); return { id:Date.now(), ...payload };
+  },
+  async getSessions(){
+    if (USE_REAL_API) return http('/me/sessions');
+    await sleep(200); return SESSIONS0;
+  },
+  async submitReview({ mentorId, rating, comment }){
+    if (USE_REAL_API) return http('/reviews',{method:'POST',body:JSON.stringify({mentorId,rating,comment})});
+    await sleep(300); return { ok:true };
+  },
+
+  // ── Bienestar / Reportes ─────────────────────────────────
+  async submitReport({ targetName, category, details, anonymous }){
+    if (USE_REAL_API) return http('/reports',{method:'POST',body:JSON.stringify({targetName,category,details,anonymous})});
+    await sleep(550);
+    return { ticketId:'BIEN-'+Math.floor(Math.random()*9000+1000), status:'recibido', eta:'24h' };
+  },
+
+  // ── Perfil / Disponibilidad ──────────────────────────────
+  async setAvailability(payload){
+    if (USE_REAL_API) return http('/me/availability',{method:'PUT',body:JSON.stringify(payload)});
+    await sleep(250); return { ok:true };
+  },
+  async updateProfile(payload){
+    if (USE_REAL_API) return http('/me',{method:'PUT',body:JSON.stringify(payload)});
+    await sleep(250); return { ok:true };
+  },
+};
+
 /* ----------------------------- UI Primitives ----------------------------- */
 const cx = (...a) => a.filter(Boolean).join(' ');
 const Card = ({className, children, ...p}) => <div {...p} className={cx('bg-white rounded-2xl border border-line shadow-card', className)}>{children}</div>;
@@ -430,9 +554,12 @@ function RequestForm() {
     desc:"Estoy súper perdido con los límites 0/0. Tengo parcial mañana y quiero entender factorización y L'Hôpital.",
     urgency:'Media', time:'Hoy 4:00–6:00 PM', mode:'Chat + pantalla compartida' });
   const set = (k,v) => setF({...f,[k]:v});
-  const submit = () => {
+  const submit = async () => {
     if(!f.subject || !f.topic.trim()){ toast('Llena la materia y el tema, parce','error'); return; }
-    setReq(f); toast('¡Listo! Buscándote padrino…','info'); go('matching');
+    try {
+      await api.createRequest(f);   // hoy mock, mañana POST /requests
+      setReq(f); toast('¡Listo! Buscándote padrino…','info'); go('matching');
+    } catch(e){ toast('No pudimos enviar la solicitud, intenta de nuevo','error'); }
   };
   return (
     <>
@@ -711,11 +838,14 @@ function ReportModal({ target, onClose }) {
     { k:'psico',  t:'Acoso o maltrato psicológico', d:'Intimidación, manipulación, humillación o presión.' },
     { k:'otro',   t:'Otro comportamiento inadecuado', d:'Describe la situación con tus palabras.' },
   ];
-  const send = () => {
+  const send = async () => {
     if(!cat){ toast('Elige el tipo de reporte para continuar','error'); return; }
     if(det.trim().length < 10){ toast('Cuéntanos un poco más para poder ayudarte','error'); return; }
-    toast('Reporte enviado a Bienestar Universitario. Te contactarán pronto. 🛡️');
-    onClose();
+    try {
+      const r = await api.submitReport({ targetName:target, category:cat, details:det, anonymous:anon });
+      toast(`Reporte ${r.ticketId} enviado a Bienestar. Respuesta en ${r.eta}. 🛡️`);
+      onClose();
+    } catch(e){ toast('No pudimos enviar el reporte. Intenta de nuevo','error'); }
   };
   return (
     <div className="fixed inset-0 z-[60] bg-ink/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
@@ -867,17 +997,19 @@ function Chat() {
   const onFile = e => { const file=e.target.files?.[0]; if(!file)return;
     setMsgs(m=>[...m,{who:'me',file:file.name,ts:now()}]); toast('Archivo compartido'); e.target.value=''; };
   const toggleShare = () => { setSharing(s=>!s); toast(sharing?'Dejaste de compartir pantalla':'Compartiendo pantalla','info'); };
-  const finish = (rating, note) => {
+  const finish = async (rating, note) => {
     const mm=Math.floor(time/60), dur = mm>=60?`${Math.floor(mm/60)}h ${mm%60}min`:`${mm} min`;
-    addSession({
-      with:p.name, subject:p.subject, date:'18 May 2026', dur, rating, status:'Completada',
-      topics:['Forma indeterminada 0/0','Factorización','Regla de L\'Hôpital'],
-      resources:['📄 Guía_limites.pdf','🔗 Video límites','📊 Tabla de equivalencias'],
-      exercises:['5 límites resueltos en sesión','Quiz práctica'],
-      notes:note || 'Sesión enfocada en límites indeterminados. Próximo paso: derivadas.'
-    });
-    toast('¡Sesión cerrada! Quedó guardada en tu historial');
-    go('history');
+    try {
+      await addSession({   // pasa por api.endSession (hoy mock, mañana POST /sessions)
+        with:p.name, subject:p.subject, date:'18 May 2026', dur, rating, status:'Completada',
+        topics:['Forma indeterminada 0/0','Factorización','Regla de L\'Hôpital'],
+        resources:['📄 Guía_limites.pdf','🔗 Video límites','📊 Tabla de equivalencias'],
+        exercises:['5 límites resueltos en sesión','Quiz práctica'],
+        notes:note || 'Sesión enfocada en límites indeterminados. Próximo paso: derivadas.'
+      });
+      toast('¡Sesión cerrada! Quedó guardada en tu historial');
+      go('history');
+    } catch(e){ toast('No pudimos cerrar la sesión, intenta de nuevo','error'); }
   };
   const mm = String(Math.floor(time/60)).padStart(2,'0'), ss = String(time%60).padStart(2,'0');
   return (
@@ -1279,12 +1411,21 @@ function Root() {
   };
   const ctx = {
     role, screen, req, peer, sessions,
-    login:(r)=>{ setRole(r); setScreen(r==='student'?'dash':'mdash'); setAuth(true); },
+    login: async (r) => {
+      try {
+        const me = await api.login({ role:r });
+        setRole(me.role); setScreen(me.role==='student'?'dash':'mdash'); setAuth(true);
+      } catch(e){ toast('No pudimos iniciar sesión, intenta de nuevo','error'); }
+    },
     logout:()=>{ setAuth(false); setReq(null); setPeer(null); setSessions([]); setScreen('dash'); },
     go:setScreen,
     setReq,
     openChatWith:(p)=>{ setPeer(p); setScreen('chat'); },
-    addSession:(s)=>setSessions(x=>[{...s,id:Date.now()},...x]),
+    addSession: async (s) => {
+      const saved = await api.endSession(s);  // hoy mock, mañana POST /sessions
+      setSessions(x=>[saved, ...x]);
+      return saved;
+    },
     toast,
   };
   if (!auth) return <App.Provider value={ctx}><Auth/><Toasts items={toasts}/></App.Provider>;
