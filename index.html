@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>UniMentor — Plataforma de Mentorías Universitarias</title>
+<title>UniMentor — Encuentra tu padrino académico</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -16,12 +16,14 @@
       extend: {
         colors: {
           sap: { DEFAULT: '#0A6ED1', dark: '#085CAD', light: '#E8F1FC', soft: '#F2F7FD' },
+          gold: { DEFAULT: '#F5B82E', dark: '#D69A1F', light: '#FEF6E0', soft: '#FFFBEC' },
           ink: '#1D2D3E', muted: '#5B6B7B', line: '#E4E9EF', bg: '#F4F6F8'
         },
         fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         boxShadow: {
           card: '0 1px 2px rgba(16,30,54,.04), 0 8px 24px rgba(16,30,54,.06)',
-          float: '0 12px 40px rgba(10,110,209,.18)'
+          float: '0 12px 40px rgba(10,110,209,.18)',
+          gold: '0 8px 24px rgba(245,184,46,.25)'
         }
       }
     }
@@ -88,36 +90,69 @@ const Ic = {
   award:<I d={<><circle cx="12" cy="9" r="6"/><path d="M9 14.5L8 22l4-2 4 2-1-7.5"/></>}/>,
   menu:<I d={<><path d="M3 6h18M3 12h18M3 18h18"/></>}/>,
   file:<I d={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></>}/>,
+  flag:<I d={<><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></>}/>,
+  shield:<I d={<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>}/>,
+  eye:<I d={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}/>,
 };
 
 /* ----------------------------- Mock Data ----------------------------- */
 const AV = (seed) => `https://i.pravatar.cc/160?img=${seed}`;
+const REVIEWS = {
+  1:[
+    { who:'Mateo R.', sem:'2º Sem', stars:5, date:'hace 3 días', t:'¡La berraca! Me ayudó a pasar de 2.5 a 4.0 en cálculo. Explica con paciencia y siempre saca el tiempo. La recomiendo con los ojos cerrados. 🙌' },
+    { who:'Isabel C.', sem:'1º Sem', stars:5, date:'hace 1 semana', t:'Hace que las matemáticas sean entendibles. Llegué llorando con un parcial y salí entendiendo todo. Una crack total.' },
+    { who:'Felipe G.', sem:'3º Sem', stars:4, date:'hace 2 semanas', t:'Muy buena padrina, súper organizada. A veces va rápido cuando estás muy perdido, pero responde dudas sin problema.' },
+    { who:'Ana K.', sem:'2º Sem', stars:5, date:'hace 3 semanas', t:'Salvó mi semestre, literal. La comparto con mis amigos cada vez que puedo. 10/10.' },
+  ],
+  2:[ { who:'Diana P.', sem:'2º Sem', stars:5, date:'hace 4 días', t:'Excelente con C++. Me enseñó a debuggear sin frustrarme. Súper recomendado.' },
+       { who:'Juan M.', sem:'1º Sem', stars:5, date:'hace 1 semana', t:'Va al grano y explica lo necesario. Perfecto cuando tienes afán.' } ],
+  3:[ { who:'Laura B.', sem:'2º Sem', stars:5, date:'hace 2 días', t:'Súper paciente con estadística. Me hizo perderle el miedo a la materia.' } ],
+  4:[ { who:'Camilo F.', sem:'3º Sem', stars:5, date:'hace 5 días', t:'Una leyenda. Lleva años ayudando primíparos y se le nota. Total recomendación.' } ],
+  5:[ { who:'Sara N.', sem:'2º Sem', stars:5, date:'hace 1 día', t:'Excelente padrina, explica álgebra como nadie.' } ],
+};
 const MENTORS = [
-  { id:1, name:'Valentina Rojas', sem:'8º Semestre', career:'Ing. de Sistemas', img:AV(47), rating:4.9, reviews:128, resp:'2 min', online:true, subjects:['Cálculo Diferencial','Álgebra Lineal','Física I'], hours:142, bio:'Monitora oficial de Cálculo. Me apasiona explicar con ejemplos del mundo real y paso a paso.', badges:['Top Mentor','100h Servicio','Racha 30 días'] },
-  { id:2, name:'Sebastián Marín', sem:'9º Semestre', career:'Ing. Electrónica', img:AV(12), rating:4.8, reviews:96, resp:'5 min', online:true, subjects:['Circuitos','Física II','Programación C++'], hours:118, bio:'Ayudo con laboratorios y proyectos. Explico desde lo básico sin asumir nada.', badges:['Mentor Verificado','Bono académico'] },
-  { id:3, name:'Camila Duarte', sem:'7º Semestre', career:'Estadística', img:AV(45), rating:5.0, reviews:74, resp:'1 min', online:true, subjects:['Estadística','Probabilidad','Python'], hours:89, bio:'Reduzcamos el miedo a la estadística juntas. Práctica guiada y mucha paciencia.', badges:['Rating Perfecto','Racha 15 días'] },
-  { id:4, name:'Andrés Beltrán', sem:'10º Semestre', career:'Ing. Industrial', img:AV(33), rating:4.7, reviews:152, resp:'8 min', online:false, subjects:['Investigación de Operaciones','Cálculo Integral'], hours:201, bio:'Más de 200 horas acompañando primíparos. Enfoque en entender, no memorizar.', badges:['Leyenda 200h','Top Mentor'] },
-  { id:5, name:'Mariana López', sem:'8º Semestre', career:'Matemáticas', img:AV(20), rating:4.9, reviews:110, resp:'3 min', online:true, subjects:['Álgebra Lineal','Ecuaciones Diferenciales'], hours:134, bio:'Las matemáticas se disfrutan cuando se entienden. Vamos a tu ritmo.', badges:['Mentor Verificado','Racha 20 días'] },
+  { id:1, name:'Valentina Rojas', sem:'8º Semestre', career:'Ing. de Sistemas', img:AV(47), rating:4.9, reviews:128, resp:'2 min', online:true, subjects:['Cálculo Diferencial','Álgebra Lineal','Física I'], hours:142, bio:'Monitora oficial de Cálculo. Me apasiona explicar con ejemplos del mundo real, paso a paso y sin enredos.', badges:['Top Padrina','100h Servicio','Racha 30 días'], verified:true },
+  { id:2, name:'Sebastián Marín', sem:'9º Semestre', career:'Ing. Electrónica', img:AV(12), rating:4.8, reviews:96, resp:'5 min', online:true, subjects:['Circuitos','Física II','Programación C++'], hours:118, bio:'Ayudo con laboratorios y proyectos. Explico desde lo básico sin asumir nada.', badges:['Padrino Verificado','Bono académico'], verified:true },
+  { id:3, name:'Camila Duarte', sem:'7º Semestre', career:'Estadística', img:AV(45), rating:5.0, reviews:74, resp:'1 min', online:true, subjects:['Estadística','Probabilidad','Python'], hours:89, bio:'Perdámosle el miedo a la estadística juntas. Práctica guiada y mucha paciencia.', badges:['Rating Perfecto','Racha 15 días'], verified:true },
+  { id:4, name:'Andrés Beltrán', sem:'10º Semestre', career:'Ing. Industrial', img:AV(33), rating:4.7, reviews:152, resp:'8 min', online:false, subjects:['Investigación de Operaciones','Cálculo Integral'], hours:201, bio:'Más de 200 horas acompañando primíparos. Enfoque en entender, no memorizar.', badges:['Leyenda 200h','Top Padrino'], verified:true },
+  { id:5, name:'Mariana López', sem:'8º Semestre', career:'Matemáticas', img:AV(20), rating:4.9, reviews:110, resp:'3 min', online:true, subjects:['Álgebra Lineal','Ecuaciones Diferenciales'], hours:134, bio:'Las matemáticas se disfrutan cuando se entienden. Vamos a tu ritmo, sin presión.', badges:['Padrina Verificada','Racha 20 días'], verified:true },
 ];
 const REQ0 = [
-  { id:1, name:'Juan Pérez', sem:'2º Sem', subject:'Cálculo Diferencial', topic:'Límites y continuidad', urgency:'Alta', ago:'hace 2 min', img:AV(60), desc:'No entiendo cómo resolver límites indeterminados 0/0 para el parcial de mañana.' },
-  { id:2, name:'Laura Gómez', sem:'1º Sem', subject:'Física I', topic:'Cinemática', urgency:'Media', ago:'hace 9 min', img:AV(31), desc:'Necesito ayuda con problemas de movimiento parabólico, tengo taller el viernes.' },
+  { id:1, name:'Juan Pérez', sem:'2º Sem', subject:'Cálculo Diferencial', topic:'Límites y continuidad', urgency:'Alta', ago:'hace 2 min', img:AV(60), desc:'Estoy súper perdido con límites 0/0 y tengo parcial mañana. ¡Auxilio!' },
+  { id:2, name:'Laura Gómez', sem:'1º Sem', subject:'Física I', topic:'Cinemática', urgency:'Media', ago:'hace 9 min', img:AV(31), desc:'Necesito ayuda con movimiento parabólico, tengo taller el viernes.' },
   { id:3, name:'Diego Torres', sem:'3º Sem', subject:'Álgebra Lineal', topic:'Matrices y determinantes', urgency:'Baja', ago:'hace 21 min', img:AV(15), desc:'Quiero reforzar operaciones con matrices antes del próximo quiz.' },
-  { id:4, name:'Sofía Ríos', sem:'2º Sem', subject:'Programación C++', topic:'Punteros y memoria', urgency:'Alta', ago:'hace 26 min', img:AV(48), desc:'Mi código da segfault y no entiendo por qué. Entrega es esta noche.' },
-  { id:5, name:'Pablo Mesa', sem:'1º Sem', subject:'Química General', topic:'Estequiometría', urgency:'Media', ago:'hace 33 min', img:AV(53), desc:'No sé balancear ecuaciones ni calcular moles. Necesito reforzar lo básico.' },
-  { id:6, name:'Daniela Cruz', sem:'3º Sem', subject:'Estadística', topic:'Distribución normal', urgency:'Baja', ago:'hace 41 min', img:AV(44), desc:'Quiero entender cómo usar la tabla Z antes del parcial.' },
+  { id:4, name:'Sofía Ríos', sem:'2º Sem', subject:'Programación C++', topic:'Punteros y memoria', urgency:'Alta', ago:'hace 26 min', img:AV(48), desc:'Mi código me da segfault y no entiendo nada. Entrega esta noche, plis.' },
+  { id:5, name:'Pablo Mesa', sem:'1º Sem', subject:'Química General', topic:'Estequiometría', urgency:'Media', ago:'hace 33 min', img:AV(53), desc:'Balancear ecuaciones me trauma. Necesito que me lo expliquen de cero.' },
+  { id:6, name:'Daniela Cruz', sem:'3º Sem', subject:'Estadística', topic:'Distribución normal', urgency:'Baja', ago:'hace 41 min', img:AV(44), desc:'Quiero entender la tabla Z antes del parcial.' },
 ];
+/* Sample sessions with detailed summaries (resources, topics, exercises) */
 const SESSIONS0 = [
-  { id:101, with:'Juan Pérez', subject:'Cálculo Diferencial', date:'17 May 2026', dur:'48 min', rating:5, status:'Completada' },
-  { id:102, with:'Laura Gómez', subject:'Física I', date:'15 May 2026', dur:'1h 12min', rating:5, status:'Completada' },
-  { id:103, with:'Sofía Ríos', subject:'Álgebra Lineal', date:'12 May 2026', dur:'35 min', rating:4, status:'Completada' },
-  { id:104, with:'Pablo Mesa', subject:'Programación C++', date:'09 May 2026', dur:'55 min', rating:5, status:'Completada' },
+  { id:101, with:'Juan Pérez', subject:'Cálculo Diferencial', date:'17 May 2026', dur:'48 min', rating:5, status:'Completada',
+    topics:['Forma indeterminada 0/0','Factorización de polinomios',"Regla de L'Hôpital",'Continuidad'],
+    resources:['📄 Guía_limites.pdf','🔗 Video: límites en 10 min','📊 Tabla de equivalencias'],
+    exercises:['Ej. 3.1 — 5 límites resueltos','Quiz de autoevaluación (8/10)'],
+    notes:'Juan entendió bien la idea de factorizar antes de evaluar. Recomiendo seguir con derivadas la próxima.' },
+  { id:102, with:'Laura Gómez', subject:'Física I', date:'15 May 2026', dur:'1h 12min', rating:5, status:'Completada',
+    topics:['Movimiento parabólico','Vectores velocidad','Alcance máximo'],
+    resources:['📄 Taller_parabolico.pdf','🔗 Simulador PhET'],
+    exercises:['3 ejercicios de tiro parabólico','Análisis gráfico'],
+    notes:'Laura ya domina la descomposición de vectores. Repasamos con un caso real (cancha de fútbol).' },
+  { id:103, with:'Sofía Ríos', subject:'Álgebra Lineal', date:'12 May 2026', dur:'35 min', rating:4, status:'Completada',
+    topics:['Producto de matrices','Determinantes 3x3','Regla de Sarrus'],
+    resources:['📄 Resumen_matrices.pdf'],
+    exercises:['4 productos matriciales','2 determinantes'],
+    notes:'Buena sesión, pero corta. Se recomienda otra de 1h para inversas.' },
+  { id:104, with:'Pablo Mesa', subject:'Programación C++', date:'09 May 2026', dur:'55 min', rating:5, status:'Completada',
+    topics:['Punteros','Aritmética de punteros','Liberación de memoria'],
+    resources:['🔗 Repositorio de ejemplos','📄 Cheat-sheet de punteros'],
+    exercises:['Refactor de su tarea','3 ejercicios guiados'],
+    notes:'Encontramos el bug del segfault. Pablo entendió por qué pasaba.' },
 ];
 const REWARDS = [
-  { id:1, t:'Certificado de Servicio Social', d:'40 horas validadas por Bienestar', need:40, ic:Ic.award, done:true },
-  { id:2, t:'Bono Cafetería $50.000', d:'Canjeable en puntos del campus', need:60, ic:Ic.gift, done:true },
-  { id:3, t:'Acceso VIP Biblioteca', d:'Salas de estudio premium', need:80, ic:Ic.book, done:false },
-  { id:4, t:'Beca parcial matrícula', d:'5% descuento próximo semestre', need:150, ic:Ic.trophy, done:false },
+  { id:1, t:'Certificado de Servicio Social', d:'40 horas validadas por Bienestar', need:40, ic:Ic.award, done:true, gold:false },
+  { id:2, t:'Bono Cafetería $50.000', d:'Canjeable en puntos del campus', need:60, ic:Ic.gift, done:true, gold:false },
+  { id:3, t:'Acceso VIP Biblioteca', d:'Salas de estudio premium', need:80, ic:Ic.book, done:false, gold:false },
+  { id:4, t:'Beca parcial matrícula', d:'5% descuento próximo semestre — premio institucional', need:150, ic:Ic.trophy, done:false, gold:true },
 ];
 
 /* ----------------------------- UI Primitives ----------------------------- */
@@ -131,22 +166,24 @@ const Btn = ({variant='primary', className, children, ...p}) => {
     outline:'border border-line text-ink hover:border-sap hover:text-sap bg-white',
     danger:'bg-red-50 text-red-600 hover:bg-red-100',
     success:'bg-emerald-500 text-white hover:bg-emerald-600',
+    gold:'bg-gold text-ink hover:bg-gold-dark hover:text-white shadow-gold',
   }[variant];
   return <button {...p} className={cx('tx px-4 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 active:scale-[.97] disabled:opacity-50 disabled:pointer-events-none', v, className)}>{children}</button>;
 };
 const Pill = ({color='sap', children}) => {
-  const c = { sap:'bg-sap-light text-sap', green:'bg-emerald-50 text-emerald-600', amber:'bg-amber-50 text-amber-600', red:'bg-red-50 text-red-600', gray:'bg-bg text-muted' }[color];
+  const c = { sap:'bg-sap-light text-sap', green:'bg-emerald-50 text-emerald-600', amber:'bg-amber-50 text-amber-600', red:'bg-red-50 text-red-600', gray:'bg-bg text-muted', gold:'bg-gold-light text-gold-dark' }[color];
   return <span className={cx('px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide', c)}>{children}</span>;
 };
 const Stars = ({n, s=14}) => (
-  <span className="inline-flex items-center gap-.5 text-amber-400">
+  <span className="inline-flex items-center gap-.5 text-gold">
     {[1,2,3,4,5].map(i => <span key={i} className={i<=Math.round(n)?'opacity-100':'opacity-25'}>{React.cloneElement(Ic.star,{s})}</span>)}
   </span>
 );
-const Avatar = ({src, size=40, online}) => (
+const Avatar = ({src, size=40, online, verified}) => (
   <span className="relative inline-block shrink-0" style={{width:size,height:size}}>
     <img src={src} className="rounded-full object-cover w-full h-full ring-2 ring-white shadow-sm" alt=""/>
     {online!==undefined && <span className={cx('absolute bottom-0 right-0 w-3 h-3 rounded-full ring-2 ring-white', online?'bg-emerald-500':'bg-gray-300')}/>}
+    {verified && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gold ring-2 ring-white grid place-items-center text-ink" title="Padrino verificado por la institución">{React.cloneElement(Ic.check,{s:11,w:3})}</span>}
   </span>
 );
 const Progress = ({v, max=100, color='bg-sap'}) => (
@@ -161,6 +198,13 @@ const Field = ({label, children}) => (
   </label>
 );
 const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-line bg-white text-sm text-ink placeholder-gray-400 focus:border-sap focus:ring-2 focus:ring-sap/15 outline-none tx";
+
+const Logo = ({size=36}) => (
+  <span className="relative inline-block shrink-0" style={{width:size,height:size}}>
+    <span className="absolute inset-0 rounded-xl bg-sap text-white grid place-items-center font-extrabold" style={{fontSize:size*0.5}}>U</span>
+    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-gold ring-2 ring-white"/>
+  </span>
+);
 
 /* ----------------------------- App Context ----------------------------- */
 const App = createContext();
@@ -193,32 +237,34 @@ function Auth() {
       <div className="hidden lg:flex flex-col justify-between w-[44%] bg-gradient-to-br from-sap to-sap-dark text-white p-12 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/10"/>
         <div className="absolute bottom-10 -left-20 w-72 h-72 rounded-full bg-white/5"/>
+        <div className="absolute top-1/3 right-12 w-3 h-3 rounded-full bg-gold shadow-gold"/>
         <div className="flex items-center gap-2.5 relative">
-          <div className="w-10 h-10 rounded-xl bg-white text-sap grid place-items-center font-extrabold text-lg">U</div>
+          <Logo size={42}/>
           <span className="text-xl font-extrabold tracking-tight">UniMentor</span>
         </div>
         <div className="relative">
-          <h1 className="text-4xl font-extrabold leading-tight">Nadie aprende solo.<br/>Todos crecemos juntos.</h1>
-          <p className="mt-4 text-white/80 text-[15px] leading-relaxed max-w-md">Conectamos estudiantes de primeros semestres con mentores experimentados. Acompañamiento académico inmediato, humano y gratuito.</p>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold mb-4">{React.cloneElement(Ic.shield,{s:13})} Avalado por la institución</span>
+          <h1 className="text-4xl font-extrabold leading-tight">Pídele la mano a un padrino.<br/>Rómpela este semestre. 🙌</h1>
+          <p className="mt-4 text-white/80 text-[15px] leading-relaxed max-w-md">Conectamos primíparos con padrinos académicos de semestres superiores. Inmediato, gratis y con buena vibra.</p>
           <div className="mt-8 flex gap-8">
-            {[['+1.200','Mentorías'],['98%','Satisfacción'],['-34%','Deserción']].map(([a,b])=>(
+            {[['+1.200','Padrinazgos'],['98%','Buena vibra'],['-34%','Deserción']].map(([a,b])=>(
               <div key={b}><div className="text-2xl font-extrabold">{a}</div><div className="text-white/70 text-xs">{b}</div></div>
             ))}
           </div>
         </div>
-        <div className="relative text-white/60 text-xs">Plataforma de bienestar e integración universitaria · 2026</div>
+        <div className="relative text-white/60 text-xs">Bienestar e integración universitaria · 2026</div>
       </div>
       <div className="flex-1 grid place-items-center p-6 bg-bg">
         <Card className="w-full max-w-md p-8 anim-pop">
           <div className="lg:hidden flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-sap text-white grid place-items-center font-extrabold">U</div>
+            <Logo size={36}/>
             <span className="font-extrabold text-ink">UniMentor</span>
           </div>
-          <h2 className="text-2xl font-extrabold text-ink">{mode==='login'?'Bienvenido de nuevo':'Crea tu cuenta'}</h2>
-          <p className="text-muted text-sm mt-1">{mode==='login'?'Ingresa para continuar tu acompañamiento':'Únete a la comunidad universitaria'}</p>
+          <h2 className="text-2xl font-extrabold text-ink">{mode==='login'?'¡Hey, qué bueno verte!':'Crea tu cuenta'}</h2>
+          <p className="text-muted text-sm mt-1">{mode==='login'?'Entra para seguir creciendo con tu padrino':'Únete a la comu universitaria'}</p>
 
           <div className="grid grid-cols-2 gap-2 mt-6">
-            {[['student','Busco ayuda',Ic.user],['mentor','Quiero ser mentor',Ic.spark]].map(([r,t,ic])=>(
+            {[['student','Necesito padrino',Ic.user],['mentor','Quiero ser padrino',Ic.spark]].map(([r,t,ic])=>(
               <button key={r} onClick={()=>setRole(r)} className={cx('tx p-3 rounded-xl border text-left', role===r?'border-sap bg-sap-soft':'border-line hover:border-sap/40')}>
                 <span className={cx('inline-flex w-8 h-8 rounded-lg items-center justify-center mb-2', role===r?'bg-sap text-white':'bg-bg text-muted')}>{React.cloneElement(ic,{s:16})}</span>
                 <div className="text-[13px] font-bold text-ink">{t}</div>
@@ -234,12 +280,12 @@ function Auth() {
           </div>
 
           <Btn className="w-full mt-6" onClick={()=>login(role)}>
-            {mode==='login'?'Iniciar sesión':'Registrarme'} {Ic.arrow}
+            {mode==='login'?'Entrar':'Registrarme'} {Ic.arrow}
           </Btn>
           <p className="text-center text-sm text-muted mt-5">
-            {mode==='login'?'¿No tienes cuenta?':'¿Ya tienes cuenta?'}{' '}
+            {mode==='login'?'¿Aún no tienes cuenta?':'¿Ya estás en la familia?'}{' '}
             <button onClick={()=>setMode(mode==='login'?'register':'login')} className="text-sap font-bold hover:underline">
-              {mode==='login'?'Regístrate':'Inicia sesión'}
+              {mode==='login'?'Únete':'Inicia sesión'}
             </button>
           </p>
         </Card>
@@ -254,25 +300,25 @@ function Shell({ children }) {
   const [open, setOpen] = useState(false);
   useEffect(()=>{ setOpen(false); },[screen]);
   const navStudent = [
-    ['dash','Inicio',Ic.grid],['request','Solicitar ayuda',Ic.plus],['matching','Mentores',Ic.spark],
-    ['chat','Mensajes',Ic.chat],['history','Historial',Ic.clock],['profile','Mi perfil',Ic.user],['settings','Configuración',Ic.cog]
+    ['dash','Inicio',Ic.grid],['request','Pedir padrino',Ic.plus],['matching','Padrinos',Ic.spark],
+    ['chat','Mensajes',Ic.chat],['history','Mis sesiones',Ic.clock],['profile','Mi perfil',Ic.user],['settings','Ajustes',Ic.cog]
   ];
   const navMentor = [
-    ['mdash','Inicio',Ic.grid],['mrequests','Solicitudes',Ic.inbox],['chat','Mensajes',Ic.chat],
-    ['incentives','Incentivos',Ic.trophy],['history','Historial',Ic.clock],['availability','Disponibilidad',Ic.cal],['settings','Configuración',Ic.cog]
+    ['mdash','Inicio',Ic.grid],['mrequests','Ahijados',Ic.inbox],['chat','Mensajes',Ic.chat],
+    ['incentives','Mis logros',Ic.trophy],['history','Historial',Ic.clock],['availability','Disponibilidad',Ic.cal],['settings','Ajustes',Ic.cog]
   ];
   const nav = role==='student'?navStudent:navMentor;
   const me = role==='student'
-    ? { name:'Juan Pérez', tag:'Estudiante · 2º Sem', img:AV(60) }
-    : { name:'Valentina Rojas', tag:'Mentor · 8º Sem', img:AV(47) };
+    ? { name:'Juan Pérez', tag:'Ahijado · 2º Sem', img:AV(60) }
+    : { name:'Valentina Rojas', tag:'Padrina · 8º Sem', img:AV(47) };
   return (
     <div className="min-h-screen flex bg-bg text-ink">
       {open && <div onClick={()=>setOpen(false)} className="fixed inset-0 bg-ink/40 z-30 lg:hidden"/>}
       <aside className={cx('w-64 shrink-0 bg-white border-r border-line flex flex-col fixed h-screen z-40 tx',
         open?'translate-x-0':'-translate-x-full lg:translate-x-0')}>
         <div className="px-5 h-16 flex items-center gap-2.5 border-b border-line">
-          <div className="w-9 h-9 rounded-xl bg-sap text-white grid place-items-center font-extrabold">U</div>
-          <div><div className="font-extrabold leading-none">UniMentor</div><div className="text-[10px] text-muted mt-.5">EdTech · Bienestar</div></div>
+          <Logo size={36}/>
+          <div><div className="font-extrabold leading-none">UniMentor</div><div className="text-[10px] text-gold-dark mt-.5 font-bold">★ Institucional</div></div>
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {nav.map(([k,t,ic])=>(
@@ -296,7 +342,7 @@ function Shell({ children }) {
             <button onClick={()=>setOpen(true)} className="lg:hidden w-10 h-10 rounded-xl hover:bg-bg grid place-items-center text-muted tx">{Ic.menu}</button>
             <div className="relative w-80 max-w-[42vw] hidden sm:block">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{React.cloneElement(Ic.search,{s:17})}</span>
-              <input placeholder="Buscar materia, mentor o tema…" className="w-full pl-9 pr-3 py-2 rounded-xl bg-bg border border-transparent focus:border-sap focus:bg-white text-sm outline-none tx"/>
+              <input placeholder="Busca un padrino, materia o tema…" className="w-full pl-9 pr-3 py-2 rounded-xl bg-bg border border-transparent focus:border-sap focus:bg-white text-sm outline-none tx"/>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -318,10 +364,10 @@ const PageHead = ({title, sub, action}) => (
     {action}
   </div>
 );
-const Stat = ({ic, label, value, sub}) => (
+const Stat = ({ic, label, value, sub, accent}) => (
   <Card className="p-5 anim-fade">
     <div className="flex items-center justify-between">
-      <span className="w-10 h-10 rounded-xl grid place-items-center bg-sap-light text-sap">{React.cloneElement(ic,{s:20})}</span>
+      <span className={cx('w-10 h-10 rounded-xl grid place-items-center', accent==='gold'?'bg-gold-light text-gold-dark':'bg-sap-light text-sap')}>{React.cloneElement(ic,{s:20})}</span>
       {sub && <Pill color="green">{sub}</Pill>}
     </div>
     <div className="text-2xl font-extrabold mt-3">{value}</div>
@@ -334,29 +380,29 @@ function StudentDash() {
   const { go, openChatWith } = useApp();
   return (
     <>
-      <PageHead title="Hola, Juan 👋" sub="Tu acompañamiento académico empieza aquí." action={<Btn onClick={()=>go('request')}>{Ic.plus} Nueva solicitud</Btn>}/>
+      <PageHead title="¡Qué más, Juan! 🤙" sub="Aquí encuentras a tu padrino académico." action={<Btn onClick={()=>go('request')}>{Ic.plus} Pedir padrino</Btn>}/>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Stat ic={Ic.chat} label="Mentorías activas" value="1"/>
-        <Stat ic={Ic.clock} label="Horas recibidas" value="9.5h" sub="+2 esta sem"/>
-        <Stat ic={Ic.book} label="Materias apoyadas" value="4"/>
-        <Stat ic={Ic.trend} label="Promedio actual" value="4.2" sub="↑ 0.4"/>
+        <Stat ic={Ic.chat} label="Padrinazgos activos" value="1"/>
+        <Stat ic={Ic.clock} label="Horas con padrinos" value="9.5h" sub="+2 esta sem"/>
+        <Stat ic={Ic.book} label="Materias salvadas" value="4"/>
+        <Stat ic={Ic.trend} label="Promedio" value="4.2" sub="↑ 0.4" accent="gold"/>
       </div>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 p-6 anim-fade">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold">Mentores recomendados para ti</h3>
+            <h3 className="font-bold">Padrinos para ti ✨</h3>
             <button onClick={()=>go('matching')} className="text-sap text-sm font-semibold hover:underline">Ver todos</button>
           </div>
           <div className="space-y-3">
             {MENTORS.slice(0,3).map(m=>(
               <div key={m.id} className="flex items-center gap-4 p-3 rounded-xl border border-line hover:border-sap/40 tx">
-                <Avatar src={m.img} size={48} online={m.online}/>
+                <Avatar src={m.img} size={48} online={m.online} verified={m.verified}/>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-sm">{m.name}</div>
                   <div className="text-muted text-xs">{m.career} · {m.sem}</div>
                   <div className="flex gap-1 mt-1.5 flex-wrap">{m.subjects.slice(0,2).map(s=><Pill key={s} color="gray">{s}</Pill>)}</div>
                 </div>
-                <div className="text-right hidden sm:block"><div className="flex items-center gap-1 text-sm font-bold">{React.cloneElement(Ic.star,{s:14,c:'#fbbf24'})}{m.rating}</div><div className="text-[11px] text-muted">{m.resp} resp.</div></div>
+                <div className="text-right hidden sm:block"><div className="flex items-center gap-1 text-sm font-bold">{React.cloneElement(Ic.star,{s:14,c:'#F5B82E'})}{m.rating}</div><div className="text-[11px] text-muted">{m.resp} resp.</div></div>
                 <Btn variant="soft" onClick={()=>go('matching')}>Conectar</Btn>
               </div>
             ))}
@@ -365,12 +411,12 @@ function StudentDash() {
         <Card className="p-6 anim-fade">
           <h3 className="font-bold mb-4">Próxima sesión</h3>
           <div className="rounded-xl bg-sap-soft border border-sap/15 p-4">
-            <div className="flex items-center gap-3"><Avatar src={AV(45)} size={44} online/><div><div className="font-bold text-sm">Camila Duarte</div><div className="text-xs text-muted">Estadística</div></div></div>
+            <div className="flex items-center gap-3"><Avatar src={AV(45)} size={44} online verified/><div><div className="font-bold text-sm">Camila Duarte</div><div className="text-xs text-muted">Estadística</div></div></div>
             <div className="mt-3 text-sm text-ink flex items-center gap-2">{React.cloneElement(Ic.clock,{s:16,c:'#0A6ED1'})} Hoy · 4:00 PM</div>
             <Btn className="w-full mt-3" onClick={()=>openChatWith({name:'Camila Duarte',img:AV(45),subject:'Estadística'})}>{Ic.chat} Ir al chat</Btn>
           </div>
-          <h3 className="font-bold mt-6 mb-3">Tip de bienestar</h3>
-          <p className="text-sm text-muted leading-relaxed">Pedir ayuda no es debilidad: el 87% de quienes usan mentorías mejoran su promedio en un semestre. 💪</p>
+          <h3 className="font-bold mt-6 mb-3">Tip del día 💡</h3>
+          <p className="text-sm text-muted leading-relaxed">Pedir ayuda no es debilidad: el 87% de quienes usan padrinos suben el promedio en un semestre. ¡Anímate!</p>
         </Card>
       </div>
     </>
@@ -381,16 +427,16 @@ function StudentDash() {
 function RequestForm() {
   const { go, setReq, toast } = useApp();
   const [f, setF] = useState({ subject:'Cálculo Diferencial', topic:'Límites y continuidad',
-    desc:"No logro resolver límites con la forma indeterminada 0/0. Tengo parcial mañana y quiero entender el método de factorización y L'Hôpital.",
+    desc:"Estoy súper perdido con los límites 0/0. Tengo parcial mañana y quiero entender factorización y L'Hôpital.",
     urgency:'Media', time:'Hoy 4:00–6:00 PM', mode:'Chat + pantalla compartida' });
   const set = (k,v) => setF({...f,[k]:v});
   const submit = () => {
-    if(!f.subject || !f.topic.trim()){ toast('Completa la materia y el tema específico','error'); return; }
-    setReq(f); toast('Solicitud enviada. Buscando tu mentor ideal…','info'); go('matching');
+    if(!f.subject || !f.topic.trim()){ toast('Llena la materia y el tema, parce','error'); return; }
+    setReq(f); toast('¡Listo! Buscándote padrino…','info'); go('matching');
   };
   return (
     <>
-      <PageHead title="Solicitar acompañamiento" sub="Cuéntanos en qué necesitas ayuda y te conectamos con un mentor ideal."/>
+      <PageHead title="Pedir un padrino 🙋" sub="Cuéntanos en qué andas perdido y te conectamos con el crack indicado."/>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 p-6 anim-fade space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
@@ -399,15 +445,15 @@ function RequestForm() {
                 {['Cálculo Diferencial','Física I','Álgebra Lineal','Programación C++','Estadística','Química General'].map(s=><option key={s}>{s}</option>)}
               </select>
             </Field>
-            <Field label="Tema específico"><input className={inputCls} placeholder="Ej: Límites indeterminados" value={f.topic} onChange={e=>set('topic',e.target.value)}/></Field>
+            <Field label="¿Qué tema te tiene loco?"><input className={inputCls} placeholder="Ej: Límites indeterminados" value={f.topic} onChange={e=>set('topic',e.target.value)}/></Field>
           </div>
-          <Field label="Describe tu problema">
+          <Field label="Cuéntanos qué pasa">
             <textarea rows="4" className={inputCls} value={f.desc} onChange={e=>set('desc',e.target.value)}/>
           </Field>
           <div>
-            <span className="text-xs font-semibold text-muted mb-1.5 block">Nivel de urgencia</span>
+            <span className="text-xs font-semibold text-muted mb-1.5 block">¿Qué tan urgente?</span>
             <div className="grid grid-cols-3 gap-2">
-              {[['Baja','gray','Sin afán'],['Media','amber','Esta semana'],['Alta','red','¡Es urgente!']].map(([u,c,d])=>(
+              {[['Baja','gray','Sin afán'],['Media','amber','Esta semana'],['Alta','red','¡Ya casi!']].map(([u,c,d])=>(
                 <button key={u} onClick={()=>set('urgency',u)} className={cx('tx p-3 rounded-xl border text-left', f.urgency===u?'border-sap bg-sap-soft':'border-line hover:border-sap/40')}>
                   <Pill color={c}>{u}</Pill><div className="text-xs text-muted mt-1.5">{d}</div>
                 </button>
@@ -415,7 +461,7 @@ function RequestForm() {
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label="Horario preferido">
+            <Field label="¿Cuándo te queda bien?">
               <select className={inputCls} value={f.time} onChange={e=>set('time',e.target.value)}>{['Hoy 4:00–6:00 PM','Hoy en la noche','Mañana en la mañana','Fin de semana','Flexible'].map(s=><option key={s}>{s}</option>)}</select>
             </Field>
             <Field label="Modalidad">
@@ -423,19 +469,19 @@ function RequestForm() {
             </Field>
           </div>
           <div className="flex gap-3 pt-2">
-            <Btn className="flex-1" onClick={submit}>Enviar solicitud {Ic.arrow}</Btn>
+            <Btn className="flex-1" onClick={submit}>¡Buscar padrino! {Ic.arrow}</Btn>
             <Btn variant="outline" onClick={()=>go('dash')}>Cancelar</Btn>
           </div>
         </Card>
         <Card className="p-6 anim-fade h-fit">
           <h3 className="font-bold mb-3">¿Cómo funciona?</h3>
-          {[['1','Envías tu solicitud','Describe tu necesidad académica'],['2','Te mostramos mentores','Perfiles que dominan ese tema'],['3','Ambos aceptan','Se abre un chat privado al instante'],['4','Aprendes y valoras','Tu mentor gana horas de servicio social']].map(([n,t,d])=>(
+          {[['1','Mándanos la señal','Dinos en qué andas perdido'],['2','Te mostramos padrinos','Cracks que dominan ese tema'],['3','Se hace el match','Chat privado al instante'],['4','Aprendes y valoras','Tu padrino gana horas de servicio']].map(([n,t,d])=>(
             <div key={n} className="flex gap-3 mb-4">
               <span className="w-7 h-7 rounded-full bg-sap-light text-sap font-bold text-sm grid place-items-center shrink-0">{n}</span>
               <div><div className="font-bold text-sm">{t}</div><div className="text-muted text-xs">{d}</div></div>
             </div>
           ))}
-          <div className="rounded-xl bg-emerald-50 p-3 text-emerald-700 text-xs font-medium">100% gratuito · Mentores verificados por la universidad</div>
+          <div className="rounded-xl bg-gold-light border border-gold/30 p-3 text-gold-dark text-xs font-bold flex items-center gap-2">{React.cloneElement(Ic.shield,{s:14})} 100% gratis · Padrinos avalados por la institución</div>
         </Card>
       </div>
     </>
@@ -446,7 +492,7 @@ function RequestForm() {
 function Matching() {
   const { go, req, openChatWith, toast } = useApp();
   const [i, setI] = useState(0);
-  const [state, setState] = useState('search'); // search | card | waiting | matched
+  const [state, setState] = useState('search');
   const [skipped, setSkipped] = useState(0);
   const [openProfile, setOpenProfile] = useState(null);
   useEffect(()=>{ if(state==='search'){ const t=setTimeout(()=>setState('card'),1800); return ()=>clearTimeout(t);} },[state]);
@@ -464,8 +510,8 @@ function Matching() {
           <div className="absolute inset-0 rounded-full bg-sap-light ring-live"/>
           <div className="absolute inset-4 rounded-full bg-sap text-white grid place-items-center text-3xl font-extrabold">U</div>
         </div>
-        <h2 className="text-2xl font-extrabold mt-8">Buscando tu mentor ideal…</h2>
-        <p className="text-muted mt-2">{subj} · {topic} — analizando especialidad y disponibilidad</p>
+        <h2 className="text-2xl font-extrabold mt-8">Buscando al padrino perfecto…</h2>
+        <p className="text-muted mt-2">{subj} · {topic} — revisando especialidad y disponibilidad</p>
         <div className="flex gap-1.5 justify-center mt-5">{[0,1,2].map(d=><span key={d} className="w-2.5 h-2.5 rounded-full bg-sap animate-bounce" style={{animationDelay:`${d*.15}s`}}/>)}</div>
       </div>
     </div>
@@ -474,10 +520,10 @@ function Matching() {
   if (state==='waiting') return (
     <div className="min-h-[70vh] grid place-items-center">
       <Card className="max-w-sm w-full p-8 text-center anim-pop">
-        <Avatar src={m.img} size={84} online/>
+        <Avatar src={m.img} size={84} online verified={m.verified}/>
         <div className="w-8 h-8 mx-auto mt-5 rounded-full border-2 border-sap border-t-transparent spin"/>
-        <h2 className="text-xl font-extrabold mt-5">Esperando confirmación…</h2>
-        <p className="text-muted text-sm mt-2">Le notificamos a <b className="text-ink">{m.name}</b> tu solicitud de <b className="text-ink">{subj}</b>. Suele responder en {m.resp}.</p>
+        <h2 className="text-xl font-extrabold mt-5">Tocándole la puerta a tu padrino…</h2>
+        <p className="text-muted text-sm mt-2">Le avisamos a <b className="text-ink">{m.name}</b> que la necesitas. Suele responder en {m.resp}.</p>
       </Card>
     </div>
   );
@@ -487,27 +533,30 @@ function Matching() {
       <Card className="max-w-md w-full p-8 text-center anim-pop">
         <div className="flex items-center justify-center -space-x-4 mb-5">
           <Avatar src={AV(60)} size={72}/>
-          <span className="z-10 w-12 h-12 rounded-full bg-emerald-500 text-white grid place-items-center shadow-float">{Ic.check}</span>
-          <Avatar src={m.img} size={72}/>
+          <span className="z-10 w-12 h-12 rounded-full bg-gold text-ink grid place-items-center shadow-gold">{Ic.check}</span>
+          <Avatar src={m.img} size={72} verified={m.verified}/>
         </div>
-        <h2 className="text-2xl font-extrabold">¡Es un match! 🎉</h2>
-        <p className="text-muted mt-2">Tú y <b className="text-ink">{m.name}</b> aceptaron la conexión. Su chat privado de <b className="text-ink">{subj}</b> ya está listo.</p>
-        <Btn className="w-full mt-6" onClick={()=>openChatWith({name:m.name,img:m.img,subject:subj,mentor:m})}>{Ic.chat} Abrir chat de mentoría</Btn>
-        <button onClick={()=>{ toast('Buscando otra opción…','info'); next(); }} className="text-muted text-sm mt-3 hover:text-ink">Buscar otro mentor</button>
+        <h2 className="text-2xl font-extrabold">¡Matchaste! 🎉</h2>
+        <p className="text-muted mt-2"><b className="text-ink">{m.name}</b> aceptó ser tu padrino de <b className="text-ink">{subj}</b>. Su chat privado ya está listo.</p>
+        <Btn className="w-full mt-6" onClick={()=>openChatWith({name:m.name,img:m.img,subject:subj,mentor:m})}>{Ic.chat} Abrir chat</Btn>
+        <button onClick={()=>{ toast('Buscando otra opción…','info'); next(); }} className="text-muted text-sm mt-3 hover:text-ink">Buscar otro padrino</button>
       </Card>
     </div>
   );
 
   return (
     <>
-      <PageHead title="Mentores disponibles" sub={`${subj} · ${topic}`} action={<Pill color={req?.urgency==='Alta'?'red':req?.urgency==='Baja'?'gray':'amber'}>Urgencia {req?.urgency?.toLowerCase()||'media'}</Pill>}/>
+      <PageHead title="Padrinos disponibles" sub={`${subj} · ${topic}`} action={<Pill color={req?.urgency==='Alta'?'red':req?.urgency==='Baja'?'gray':'amber'}>Urgencia {req?.urgency?.toLowerCase()||'media'}</Pill>}/>
       <div className="grid lg:grid-cols-5 gap-5">
         <Card className="lg:col-span-3 p-0 overflow-hidden anim-pop">
           <div className="h-28 bg-gradient-to-r from-sap to-sap-dark relative">
-            <span className="absolute top-4 right-4">{m.online?<Pill color="green">● En línea ahora</Pill>:<Pill color="gray">Offline</Pill>}</span>
+            <span className="absolute top-4 right-4 flex gap-2">
+              {m.verified && <Pill color="gold">★ Verificado</Pill>}
+              {m.online?<Pill color="green">● En línea</Pill>:<Pill color="gray">Offline</Pill>}
+            </span>
           </div>
           <div className="px-5 sm:px-7 pb-7 -mt-12">
-            <Avatar src={m.img} size={96} online={m.online}/>
+            <Avatar src={m.img} size={96} online={m.online} verified={m.verified}/>
             <div className="flex items-start justify-between mt-3">
               <div>
                 <h2 className="text-xl font-extrabold">{m.name}</h2>
@@ -515,7 +564,7 @@ function Matching() {
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-1 justify-end"><Stars n={m.rating}/><span className="font-bold ml-1">{m.rating}</span></div>
-                <div className="text-xs text-muted">{m.reviews} valoraciones</div>
+                <div className="text-xs text-muted">{m.reviews} reseñas</div>
               </div>
             </div>
             <p className="text-sm text-ink/80 mt-4 leading-relaxed">{m.bio}</p>
@@ -533,8 +582,8 @@ function Matching() {
             </div>
             <div className="flex flex-wrap gap-3 mt-7">
               <Btn variant="outline" className="flex-1" onClick={next}>{Ic.swap} Saltar</Btn>
-              <Btn variant="ghost" onClick={()=>setOpenProfile(m)}>Ver perfil</Btn>
-              <Btn className="flex-1" onClick={accept}>{Ic.check} Aceptar mentor</Btn>
+              <Btn variant="ghost" onClick={()=>setOpenProfile(m)}>{Ic.eye} Ver perfil</Btn>
+              <Btn className="flex-1" onClick={accept}>{Ic.check} Aceptar padrino</Btn>
             </div>
           </div>
         </Card>
@@ -542,17 +591,17 @@ function Matching() {
           <div className="text-xs font-bold text-muted px-1 flex justify-between"><span>SIGUIENTES OPCIONES</span><span>{skipped} saltados</span></div>
           {MENTORS.filter((_,x)=>x!==i).map(o=>(
             <Card key={o.id} className="p-4 flex items-center gap-3 anim-slide hover:border-sap/40 tx cursor-pointer" onClick={()=>setOpenProfile(o)}>
-              <Avatar src={o.img} size={44} online={o.online}/>
+              <Avatar src={o.img} size={44} online={o.online} verified={o.verified}/>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm truncate">{o.name}</div>
                 <div className="text-[11px] text-muted">{o.sem} · {o.subjects[0]}</div>
               </div>
-              <div className="text-right"><div className="text-sm font-bold flex items-center gap-1">{React.cloneElement(Ic.star,{s:13,c:'#fbbf24'})}{o.rating}</div><div className="text-[10px] text-muted">{o.resp}</div></div>
+              <div className="text-right"><div className="text-sm font-bold flex items-center gap-1">{React.cloneElement(Ic.star,{s:13,c:'#F5B82E'})}{o.rating}</div><div className="text-[10px] text-muted">{o.resp}</div></div>
             </Card>
           ))}
-          <Card className="p-4 bg-sap-soft border-sap/15">
-            <div className="text-sm font-bold text-sap flex items-center gap-2">{React.cloneElement(Ic.bolt,{s:16})} Coincidencia alta</div>
-            <p className="text-xs text-muted mt-1">Estos mentores dominan tu tema y están activos ahora.</p>
+          <Card className="p-4 bg-gold-light border-gold/30">
+            <div className="text-sm font-bold text-gold-dark flex items-center gap-2">{React.cloneElement(Ic.bolt,{s:16})} Match alto</div>
+            <p className="text-xs text-muted mt-1">Estos padrinos dominan tu tema y están activos ahora.</p>
           </Card>
         </div>
       </div>
@@ -561,16 +610,20 @@ function Matching() {
   );
 }
 
-/* ----------------------------- Mentor Profile Modal ----------------------------- */
+/* ----------------------------- Mentor Profile Modal (con reseñas y reporte) ----------------------------- */
 function ProfileModal({ m, onClose }) {
+  const [reporting, setReporting] = useState(false);
+  const reviews = REVIEWS[m.id] || [];
   return (
+    <>
     <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm grid place-items-center p-4 sm:p-6" onClick={onClose}>
       <Card className="max-w-2xl w-full max-h-[88vh] overflow-y-auto p-0 anim-pop" onClick={e=>e.stopPropagation()}>
         <div className="h-32 bg-gradient-to-r from-sap to-sap-dark relative">
           <button onClick={onClose} className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/20 text-white grid place-items-center hover:bg-white/30 tx">{Ic.x}</button>
+          {m.verified && <span className="absolute top-4 left-4"><Pill color="gold">★ Padrino verificado</Pill></span>}
         </div>
         <div className="px-6 sm:px-8 pb-8 -mt-14">
-          <Avatar src={m.img} size={108} online={m.online}/>
+          <Avatar src={m.img} size={108} online={m.online} verified={m.verified}/>
           <div className="flex items-start justify-between mt-3 gap-4">
             <div><h2 className="text-2xl font-extrabold">{m.name}</h2><p className="text-muted">{m.career} · {m.sem}</p></div>
             <div className="text-right shrink-0"><div className="flex items-center gap-1 justify-end"><Stars n={m.rating} s={18}/></div><div className="text-sm font-bold mt-1">{m.rating} · {m.reviews} reseñas</div></div>
@@ -582,9 +635,48 @@ function ProfileModal({ m, onClose }) {
             ))}
           </div>
           <div className="mt-6"><h3 className="font-bold mb-3">Logros e incentivos</h3>
-            <div className="flex gap-2 flex-wrap">{m.badges.map(b=><span key={b} className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-600 text-xs font-bold flex items-center gap-1.5">{React.cloneElement(Ic.trophy,{s:14})}{b}</span>)}</div>
+            <div className="flex gap-2 flex-wrap">{m.badges.map(b=><span key={b} className="px-3 py-1.5 rounded-xl bg-gold-light text-gold-dark text-xs font-bold flex items-center gap-1.5">{React.cloneElement(Ic.trophy,{s:14})}{b}</span>)}</div>
           </div>
-          <div className="mt-6"><h3 className="font-bold mb-3">Historial de mentorías</h3>
+
+          {/* Resumen de calificaciones tipo Play Store */}
+          <div className="mt-7">
+            <h3 className="font-bold mb-3">Reseñas de ahijados</h3>
+            <div className="grid sm:grid-cols-3 gap-4 mb-5 items-center">
+              <div className="text-center sm:text-left">
+                <div className="text-5xl font-extrabold">{m.rating.toFixed(1)}</div>
+                <Stars n={m.rating} s={16}/>
+                <div className="text-xs text-muted mt-1">{m.reviews} reseñas totales</div>
+              </div>
+              <div className="sm:col-span-2 space-y-1">
+                {[5,4,3,2,1].map(s=>{
+                  const pct = s===5?78:s===4?16:s===3?4:s===2?1:1;
+                  return (
+                    <div key={s} className="flex items-center gap-2 text-xs">
+                      <span className="w-3 text-muted">{s}</span>
+                      <div className="flex-1 h-2 rounded-full bg-bg overflow-hidden">
+                        <div className="h-full bg-gold" style={{width:pct+'%'}}/>
+                      </div>
+                      <span className="w-8 text-right text-muted">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="space-y-3">
+              {reviews.map((r,i)=>(
+                <div key={i} className="rounded-xl border border-line p-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar src={AV(20+i*9)} size={36}/>
+                    <div className="flex-1"><div className="font-bold text-sm">{r.who}</div><div className="text-[11px] text-muted">{r.sem} · {r.date}</div></div>
+                    <Stars n={r.stars} s={14}/>
+                  </div>
+                  <p className="text-sm text-ink/80 mt-3 leading-relaxed">"{r.t}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6"><h3 className="font-bold mb-3">Historial reciente</h3>
             <div className="space-y-2">
               {SESSIONS0.slice(0,3).map(s=>(
                 <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-line text-sm">
@@ -594,12 +686,129 @@ function ProfileModal({ m, onClose }) {
               ))}
             </div>
           </div>
-          <Btn className="w-full mt-7" onClick={onClose}>Cerrar perfil</Btn>
+
+          <div className="flex gap-3 mt-7">
+            <Btn variant="outline" className="flex-1 !text-red-600 hover:!border-red-300" onClick={()=>setReporting(true)}>{React.cloneElement(Ic.flag,{s:16})} Reportar</Btn>
+            <Btn className="flex-1" onClick={onClose}>Cerrar</Btn>
+          </div>
+        </div>
+      </Card>
+    </div>
+    {reporting && <ReportModal target={m.name} onClose={()=>setReporting(false)}/>}
+    </>
+  );
+}
+
+/* ----------------------------- Report Modal (Bienestar) ----------------------------- */
+function ReportModal({ target, onClose }) {
+  const { toast } = useApp();
+  const [cat, setCat] = useState(null);
+  const [det, setDet] = useState('');
+  const [anon, setAnon] = useState(true);
+  const cats = [
+    { k:'sexual', t:'Conducta sexual inapropiada', d:'Insinuaciones, acoso o lenguaje sexual no deseado.' },
+    { k:'verbal', t:'Lenguaje verbal ofensivo', d:'Insultos, gritos, descalificaciones o palabras hirientes.' },
+    { k:'psico',  t:'Acoso o maltrato psicológico', d:'Intimidación, manipulación, humillación o presión.' },
+    { k:'otro',   t:'Otro comportamiento inadecuado', d:'Describe la situación con tus palabras.' },
+  ];
+  const send = () => {
+    if(!cat){ toast('Elige el tipo de reporte para continuar','error'); return; }
+    if(det.trim().length < 10){ toast('Cuéntanos un poco más para poder ayudarte','error'); return; }
+    toast('Reporte enviado a Bienestar Universitario. Te contactarán pronto. 🛡️');
+    onClose();
+  };
+  return (
+    <div className="fixed inset-0 z-[60] bg-ink/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <Card className="max-w-lg w-full p-7 anim-pop max-h-[92vh] overflow-y-auto" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-start gap-3 mb-4">
+          <span className="w-11 h-11 rounded-xl bg-red-50 text-red-500 grid place-items-center shrink-0">{React.cloneElement(Ic.shield,{s:22})}</span>
+          <div>
+            <h2 className="text-xl font-extrabold">Reportar a {target}</h2>
+            <p className="text-muted text-sm">Tu reporte es revisado por <b>Bienestar Universitario</b>. Aquí estás seguro/a.</p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-gold-light border border-gold/30 p-3 text-gold-dark text-xs mb-4 flex items-center gap-2">
+          {React.cloneElement(Ic.shield,{s:14})} La universidad se compromete a responder en menos de 24 horas hábiles.
+        </div>
+
+        <div className="space-y-2 mb-4">
+          <div className="text-xs font-bold text-muted mb-1">¿Qué pasó?</div>
+          {cats.map(c=>(
+            <button key={c.k} onClick={()=>setCat(c.k)} className={cx('w-full text-left p-3 rounded-xl border tx', cat===c.k?'border-red-400 bg-red-50/60':'border-line hover:border-red-200')}>
+              <div className="flex items-center gap-2">
+                <span className={cx('w-4 h-4 rounded-full border-2 grid place-items-center', cat===c.k?'border-red-500 bg-red-500':'border-gray-300')}>
+                  {cat===c.k && <span className="w-1.5 h-1.5 rounded-full bg-white"/>}
+                </span>
+                <span className="font-bold text-sm text-ink">{c.t}</span>
+              </div>
+              <div className="text-xs text-muted ml-6 mt-.5">{c.d}</div>
+            </button>
+          ))}
+        </div>
+
+        <Field label="Descríbenos lo que ocurrió">
+          <textarea rows="4" className={inputCls} value={det} onChange={e=>setDet(e.target.value)} placeholder="Cuéntanos qué pasó, cuándo, y cómo te sentiste. Toda la información se trata con confidencialidad."/>
+        </Field>
+
+        <label className="flex items-center gap-2 mt-3 cursor-pointer">
+          <input type="checkbox" checked={anon} onChange={e=>setAnon(e.target.checked)} className="w-4 h-4 rounded accent-sap"/>
+          <span className="text-sm text-ink">Quiero reportar de forma <b>anónima</b></span>
+        </label>
+
+        <div className="flex gap-3 mt-6">
+          <Btn variant="outline" className="flex-1" onClick={onClose}>Cancelar</Btn>
+          <Btn variant="danger" className="flex-1" onClick={send}>{React.cloneElement(Ic.flag,{s:16})} Enviar reporte</Btn>
+        </div>
+        <p className="text-[11px] text-muted text-center mt-4">Si estás en peligro inmediato llama a la <b>Línea de Emergencias 123</b> o al <b>Bienestar Universitario: ext. 4040</b>.</p>
+      </Card>
+    </div>
+  );
+}
+
+/* ----------------------------- Session Summary Modal ----------------------------- */
+function SessionSummaryModal({ s, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <Card className="max-w-2xl w-full max-h-[92vh] overflow-y-auto p-0 anim-pop" onClick={e=>e.stopPropagation()}>
+        <div className="px-6 sm:px-8 pt-7 pb-4 border-b border-line">
+          <div className="flex items-center justify-between mb-3">
+            <Pill color="green">Completada</Pill>
+            <button onClick={onClose} className="w-9 h-9 rounded-xl hover:bg-bg text-muted grid place-items-center tx">{Ic.x}</button>
+          </div>
+          <h2 className="text-2xl font-extrabold">{s.subject}</h2>
+          <p className="text-muted text-sm mt-1">Sesión con <b className="text-ink">{s.with}</b></p>
+          <div className="flex flex-wrap gap-4 mt-4 text-sm">
+            <span className="flex items-center gap-1.5 text-muted">{React.cloneElement(Ic.cal,{s:15})} {s.date}</span>
+            <span className="flex items-center gap-1.5 text-muted">{React.cloneElement(Ic.clock,{s:15})} {s.dur}</span>
+            <span className="flex items-center gap-1.5"><Stars n={s.rating} s={14}/></span>
+          </div>
+        </div>
+        <div className="px-6 sm:px-8 py-6 space-y-5">
+          <Section title="📚 Temas tratados" items={s.topics}/>
+          <Section title="📎 Recursos utilizados" items={s.resources}/>
+          <Section title="✍️ Ejercicios asignados" items={s.exercises}/>
+          {s.notes && <div>
+            <div className="text-xs font-bold text-muted mb-2 uppercase tracking-wide">Notas del padrino</div>
+            <div className="rounded-xl bg-gold-soft border border-gold/20 p-4 text-sm text-ink leading-relaxed">{s.notes}</div>
+          </div>}
+        </div>
+        <div className="px-6 sm:px-8 pb-7 flex gap-3">
+          <Btn variant="outline" className="flex-1" onClick={onClose}>Cerrar</Btn>
+          <Btn className="flex-1">Volver a estudiar 📥 Descargar resumen</Btn>
         </div>
       </Card>
     </div>
   );
 }
+const Section = ({title, items}) => (
+  <div>
+    <div className="text-xs font-bold text-muted mb-2 uppercase tracking-wide">{title}</div>
+    <div className="space-y-1.5">
+      {items.map(a=><div key={a} className="text-sm p-2.5 rounded-lg bg-bg flex items-center gap-2"><span className="text-sap shrink-0">{React.cloneElement(Ic.check,{s:14})}</span>{a}</div>)}
+    </div>
+  </div>
+);
 
 /* ----------------------------- End Session Modal ----------------------------- */
 function EndSessionModal({ peer, dur, onClose, onConfirm }) {
@@ -608,24 +817,24 @@ function EndSessionModal({ peer, dur, onClose, onConfirm }) {
   return (
     <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
       <Card className="max-w-md w-full p-7 anim-pop" onClick={e=>e.stopPropagation()}>
-        <h2 className="text-xl font-extrabold">Finalizar sesión</h2>
+        <h2 className="text-xl font-extrabold">Cerrar sesión 🎯</h2>
         <p className="text-muted text-sm mt-1">Sesión con {peer.name} · {peer.subject} · {dur}</p>
         <div className="text-center my-6">
-          <div className="text-sm font-semibold text-muted mb-2">¿Cómo estuvo la mentoría?</div>
+          <div className="text-sm font-semibold text-muted mb-2">¿Cómo te fue con tu padrino?</div>
           <div className="flex justify-center gap-2">
             {[1,2,3,4,5].map(i=>(
-              <button key={i} onClick={()=>setR(i)} className={cx('tx', i<=r?'text-amber-400':'text-gray-300 hover:text-amber-200')}>
+              <button key={i} onClick={()=>setR(i)} className={cx('tx', i<=r?'text-gold':'text-gray-300 hover:text-gold-light')}>
                 {React.cloneElement(Ic.star,{s:34})}
               </button>
             ))}
           </div>
         </div>
-        <Field label="Comentario (opcional)">
-          <textarea rows="3" className={inputCls} placeholder="¿Qué te ayudó más?" value={note} onChange={e=>setNote(e.target.value)}/>
+        <Field label="Déjale una reseña (opcional)">
+          <textarea rows="3" className={inputCls} placeholder="Cuéntale a otros ahijados cómo fue la tutoría…" value={note} onChange={e=>setNote(e.target.value)}/>
         </Field>
         <div className="flex gap-3 mt-5">
           <Btn variant="outline" className="flex-1" onClick={onClose}>Seguir en sesión</Btn>
-          <Btn variant="success" className="flex-1" onClick={()=>onConfirm(r)}>{Ic.check} Finalizar y valorar</Btn>
+          <Btn variant="success" className="flex-1" onClick={()=>onConfirm(r,note)}>{Ic.check} Cerrar y valorar</Btn>
         </div>
       </Card>
     </div>
@@ -637,30 +846,37 @@ function Chat() {
   const { go, peer, addSession, toast, role } = useApp();
   const p = peer || { name:'Valentina Rojas', img:AV(47), subject:'Cálculo Diferencial' };
   const [msgs, setMsgs] = useState([
-    { who:'them', t:`¡Hola! Vi que necesitas ayuda con ${p.subject}. ¿Tienes el ejercicio a la mano? 😊`, ts:'4:01 PM' },
+    { who:'them', t:`¡Hey! Vi que andas perdido con ${p.subject}. ¿Tienes el ejercicio a la mano? 😊`, ts:'4:01 PM' },
     { who:'me', t:'¡Hola! Sí, es el límite de (x²-4)/(x-2) cuando x→2', ts:'4:02 PM' },
-    { who:'them', t:'Perfecto. Eso da 0/0, así que factorizamos el numerador: x²-4 = (x-2)(x+2). Te comparto pantalla y lo vemos paso a paso.', ts:'4:03 PM' },
-    { who:'me', t:'¡Ahí sí lo veo! Entonces se cancela (x-2) y queda x+2 → 4', ts:'4:05 PM' },
-    { who:'them', t:'¡Exacto! 🎉 Ese es el método de factorización. Ahora hagamos uno con L\'Hôpital para que compares.', ts:'4:06 PM' },
+    { who:'them', t:'Listo. Eso da 0/0, así que factorizamos: x²-4 = (x-2)(x+2). Te comparto pantalla y lo vemos.', ts:'4:03 PM' },
+    { who:'me', t:'¡Ahí sí cayó! Entonces se cancela (x-2) y queda x+2 → 4', ts:'4:05 PM' },
+    { who:'them', t:'¡Exacto! 🎉 Ese es el método de factorización. Ahora vamos con L\'Hôpital para que compares.', ts:'4:06 PM' },
   ]);
   const [val, setVal] = useState('');
   const [time, setTime] = useState(372);
   const [sharing, setSharing] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const fileRef = useRef();
   const endRef = useRef();
   useEffect(()=>{ const t=setInterval(()=>setTime(s=>s+1),1000); return ()=>clearInterval(t); },[]);
   useEffect(()=>{ endRef.current?.scrollIntoView({behavior:'smooth'}); },[msgs]);
   const now = () => new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
   const send = () => { if(!val.trim())return; setMsgs(m=>[...m,{who:'me',t:val,ts:now()}]); setVal('');
-    setTimeout(()=>setMsgs(m=>[...m,{who:'them',t:'¡Buena pregunta! Déjame mostrarte con un ejemplo.',ts:now()}]),1200); };
+    setTimeout(()=>setMsgs(m=>[...m,{who:'them',t:'¡Buena pregunta! Te la respondo con un ejemplo.',ts:now()}]),1200); };
   const onFile = e => { const file=e.target.files?.[0]; if(!file)return;
-    setMsgs(m=>[...m,{who:'me',file:file.name,ts:now()}]); toast('Archivo compartido en el chat'); e.target.value=''; };
+    setMsgs(m=>[...m,{who:'me',file:file.name,ts:now()}]); toast('Archivo compartido'); e.target.value=''; };
   const toggleShare = () => { setSharing(s=>!s); toast(sharing?'Dejaste de compartir pantalla':'Compartiendo pantalla','info'); };
-  const finish = (rating) => {
+  const finish = (rating, note) => {
     const mm=Math.floor(time/60), dur = mm>=60?`${Math.floor(mm/60)}h ${mm%60}min`:`${mm} min`;
-    addSession({ with:p.name, subject:p.subject, date:'18 May 2026', dur, rating, status:'Completada' });
-    toast('Sesión finalizada y guardada en tu historial');
+    addSession({
+      with:p.name, subject:p.subject, date:'18 May 2026', dur, rating, status:'Completada',
+      topics:['Forma indeterminada 0/0','Factorización','Regla de L\'Hôpital'],
+      resources:['📄 Guía_limites.pdf','🔗 Video límites','📊 Tabla de equivalencias'],
+      exercises:['5 límites resueltos en sesión','Quiz práctica'],
+      notes:note || 'Sesión enfocada en límites indeterminados. Próximo paso: derivadas.'
+    });
+    toast('¡Sesión cerrada! Quedó guardada en tu historial');
     go('history');
   };
   const mm = String(Math.floor(time/60)).padStart(2,'0'), ss = String(time%60).padStart(2,'0');
@@ -670,16 +886,17 @@ function Chat() {
         <div className="min-h-16 py-2 bg-white border-b border-line flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <button onClick={()=>go(role==='mentor'?'mrequests':'matching')} className="text-muted hover:text-ink tx">{Ic.back}</button>
-            <Avatar src={p.img} size={42} online/>
+            <Avatar src={p.img} size={42} online verified={role==='student'}/>
             <div><div className="font-bold leading-none">{p.name}</div><div className="text-xs text-emerald-600 mt-1 font-medium">● En línea · {p.subject}</div></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-1.5 rounded-xl bg-sap-light text-sap text-sm font-bold flex items-center gap-1.5">{React.cloneElement(Ic.clock,{s:15})} {mm}:{ss}</span>
             <Btn variant={sharing?'success':'outline'} className="!px-3" onClick={toggleShare}>{React.cloneElement(Ic.screen,{s:16})} <span className="hidden sm:inline">{sharing?'Compartiendo':'Pantalla'}</span></Btn>
+            {role==='student' && <button onClick={()=>setReporting(true)} className="w-10 h-10 rounded-xl hover:bg-red-50 text-red-500 grid place-items-center tx" title="Reportar comportamiento inadecuado">{React.cloneElement(Ic.flag,{s:17})}</button>}
             <Btn variant="danger" className="!px-3" onClick={()=>setEnding(true)}>{React.cloneElement(Ic.phoneOff,{s:16})} <span className="hidden sm:inline">Finalizar</span></Btn>
           </div>
         </div>
-        {sharing && <div className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-6 py-2 flex items-center gap-2 border-b border-emerald-100">{React.cloneElement(Ic.screen,{s:14})} Estás compartiendo tu pantalla con {p.name.split(' ')[0]}</div>}
+        {sharing && <div className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-6 py-2 flex items-center gap-2 border-b border-emerald-100">{React.cloneElement(Ic.screen,{s:14})} Compartiendo pantalla con {p.name.split(' ')[0]}</div>}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-bg">
           <div className="text-center"><span className="text-xs text-muted bg-white px-3 py-1 rounded-full border border-line">Sesión iniciada · Hoy 4:00 PM</span></div>
           {msgs.map((x,i)=>(
@@ -723,8 +940,10 @@ function Chat() {
             </div>
           </div>
         ))}
+        {role==='student' && <button onClick={()=>setReporting(true)} className="w-full text-xs text-red-500 hover:bg-red-50 rounded-lg py-2 font-bold tx flex items-center justify-center gap-1.5">{React.cloneElement(Ic.flag,{s:13})} Reportar a este padrino</button>}
       </aside>
       {ending && <EndSessionModal peer={p} dur={`${mm}:${ss} min`} onClose={()=>setEnding(false)} onConfirm={finish}/>}
+      {reporting && <ReportModal target={p.name} onClose={()=>setReporting(false)}/>}
     </div>
   );
 }
@@ -733,13 +952,13 @@ function Chat() {
 function StudentProfile() {
   return (
     <>
-      <PageHead title="Mi perfil" sub="Tu progreso académico y acompañamiento."/>
+      <PageHead title="Mi perfil" sub="Tu progreso académico y los padrinos que te han ayudado."/>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="p-6 text-center anim-fade">
           <Avatar src={AV(60)} size={96}/>
           <h2 className="text-xl font-extrabold mt-3">Juan Pérez</h2>
           <p className="text-muted text-sm">Ing. de Sistemas · 2º Semestre</p>
-          <div className="flex justify-center gap-2 mt-3"><Pill color="sap">Estudiante</Pill><Pill color="green">Activo</Pill></div>
+          <div className="flex justify-center gap-2 mt-3"><Pill color="sap">Ahijado</Pill><Pill color="green">Activo</Pill></div>
           <div className="grid grid-cols-3 gap-3 mt-6 text-center">
             {[['12','Sesiones'],['9.5h','Recibidas'],['4.8','Mi rating']].map(([a,b])=>(
               <div key={b}><div className="text-lg font-extrabold">{a}</div><div className="text-[11px] text-muted">{b}</div></div>
@@ -748,7 +967,7 @@ function StudentProfile() {
         </Card>
         <Card className="lg:col-span-2 p-6 anim-fade">
           <h3 className="font-bold mb-4">Progreso por materia</h3>
-          {[['Cálculo Diferencial',75,'bg-sap'],['Física I',55,'bg-emerald-500'],['Álgebra Lineal',40,'bg-amber-500'],['Programación',88,'bg-violet-500']].map(([s,v,c])=>(
+          {[['Cálculo Diferencial',75,'bg-sap'],['Física I',55,'bg-emerald-500'],['Álgebra Lineal',40,'bg-gold'],['Programación',88,'bg-violet-500']].map(([s,v,c])=>(
             <div key={s} className="mb-4">
               <div className="flex justify-between text-sm mb-1.5"><span className="font-semibold">{s}</span><span className="text-muted">{v}%</span></div>
               <Progress v={v} color={c}/>
@@ -756,7 +975,7 @@ function StudentProfile() {
           ))}
           <div className="mt-6 rounded-xl bg-sap-soft border border-sap/15 p-4 flex items-center gap-3">
             {React.cloneElement(Ic.trend,{s:22,c:'#0A6ED1'})}
-            <div className="text-sm"><b>Vas muy bien.</b> Tu promedio subió 0.4 puntos desde que empezaste mentorías.</div>
+            <div className="text-sm"><b>¡Vas como tren!</b> Tu promedio subió 0.4 puntos desde que tienes padrino.</div>
           </div>
         </Card>
       </div>
@@ -769,24 +988,24 @@ function MentorDash() {
   const { go, openChatWith, toast } = useApp();
   const [reqs, setReqs] = useState(REQ0.slice(0,3));
   const accept = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); openChatWith({name:r.name,img:r.img,subject:r.subject}); };
-  const reject = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); toast(`Solicitud de ${r.name} rechazada`,'info'); };
+  const reject = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); toast(`Rechazaste a ${r.name}`,'info'); };
   return (
     <>
-      <PageHead title="Hola, Valentina ✨" sub="Tu impacto en la comunidad universitaria." action={<Btn onClick={()=>go('mrequests')}>{Ic.inbox} Ver solicitudes</Btn>}/>
+      <PageHead title="¡Eres un crack, Valentina! ✨" sub="Mira el impacto que tienes en la comu." action={<Btn onClick={()=>go('mrequests')}>{Ic.inbox} Ver ahijados</Btn>}/>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Stat ic={Ic.spark} label="Estudiantes ayudados" value="64"/>
-        <Stat ic={Ic.clock} label="Horas de servicio" value="142h" sub="+6 esta sem"/>
+        <Stat ic={Ic.spark} label="Ahijados ayudados" value="64"/>
+        <Stat ic={Ic.clock} label="Horas de servicio" value="142h" sub="+6 esta sem" accent="gold"/>
         <Stat ic={Ic.star} label="Rating promedio" value="4.9"/>
-        <Stat ic={Ic.trophy} label="Puntos UniMentor" value="2.840" sub="↑ 120"/>
+        <Stat ic={Ic.trophy} label="Puntos UniMentor" value="2.840" sub="↑ 120" accent="gold"/>
       </div>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 p-6 anim-fade">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold">Solicitudes entrantes</h3>
+            <h3 className="font-bold">Ahijados pidiendo cacha</h3>
             <Pill color={reqs.length?'red':'gray'}>{reqs.length} {reqs.length===1?'nueva':'nuevas'}</Pill>
           </div>
           <div className="space-y-3">
-            {reqs.length===0 && <div className="text-center py-10 text-muted text-sm">No hay solicitudes pendientes. ¡Buen trabajo! 🎉</div>}
+            {reqs.length===0 && <div className="text-center py-10 text-muted text-sm">No hay solicitudes pendientes. ¡Tómate un descansito! 🎉</div>}
             {reqs.map(r=>(
               <div key={r.id} className="flex flex-wrap items-center gap-4 p-4 rounded-xl border border-line hover:border-sap/40 tx anim-slide">
                 <Avatar src={r.img} size={46}/>
@@ -812,11 +1031,11 @@ function MentorDash() {
               <Btn className="w-full mt-3" onClick={()=>openChatWith({name:'Juan Pérez',img:AV(60),subject:'Cálculo Diferencial'})}>{Ic.chat} Continuar</Btn>
             </div>
           </Card>
-          <Card className="p-6 anim-fade">
-            <h3 className="font-bold mb-2">Progreso de incentivos</h3>
-            <div className="text-sm text-muted mb-2">142 / 150h para la beca parcial</div>
-            <Progress v={142} max={150}/>
-            <Btn variant="soft" className="w-full mt-4" onClick={()=>go('incentives')}>{Ic.trophy} Ver recompensas</Btn>
+          <Card className="p-6 anim-fade border-gold/30 bg-gold-soft">
+            <h3 className="font-bold mb-2 flex items-center gap-2">{React.cloneElement(Ic.trophy,{s:18,c:'#D69A1F'})} Próxima recompensa</h3>
+            <div className="text-sm text-muted mb-2">142 / 150h para la <b className="text-gold-dark">beca institucional</b></div>
+            <Progress v={142} max={150} color="bg-gold"/>
+            <Btn variant="gold" className="w-full mt-4" onClick={()=>go('incentives')}>Ver mis logros</Btn>
           </Card>
         </div>
       </div>
@@ -829,12 +1048,12 @@ function MentorRequests() {
   const { openChatWith, toast } = useApp();
   const [reqs, setReqs] = useState(REQ0);
   const accept = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); openChatWith({name:r.name,img:r.img,subject:r.subject}); };
-  const reject = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); toast(`Rechazaste la solicitud de ${r.name}`,'info'); };
+  const reject = r => { setReqs(x=>x.filter(i=>i.id!==r.id)); toast(`Rechazaste a ${r.name}`,'info'); };
   return (
     <>
-      <PageHead title="Solicitudes en tiempo real" sub="Acepta las que dominas. Cada mentoría suma horas y puntos." action={<Pill color="green">● Disponible</Pill>}/>
+      <PageHead title="Ahijados pidiendo padrino" sub="Acepta los que dominas. Cada sesión suma horas y puntos." action={<Pill color="green">● Disponible</Pill>}/>
       {reqs.length===0
-        ? <Card className="p-16 text-center anim-fade"><div className="text-4xl mb-3">🎉</div><div className="font-bold">Estás al día</div><p className="text-muted text-sm mt-1">No hay solicitudes pendientes. Te avisaremos cuando llegue una nueva.</p></Card>
+        ? <Card className="p-16 text-center anim-fade"><div className="text-4xl mb-3">🎉</div><div className="font-bold">¡Estás al día!</div><p className="text-muted text-sm mt-1">No hay solicitudes pendientes. Te avisamos cuando llegue una nueva.</p></Card>
         : <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {reqs.map(r=>(
             <Card key={r.id} className="p-5 anim-fade hover:shadow-float tx">
@@ -860,45 +1079,46 @@ function MentorRequests() {
 function Incentives() {
   return (
     <>
-      <PageHead title="Sistema de incentivos" sub="Ayudar transforma a otros — y te recompensa a ti."/>
+      <PageHead title="Mis logros 🏆" sub="Ayudar es chimba — y la universidad te lo devuelve."/>
       <div className="grid lg:grid-cols-3 gap-5 mb-6">
         <Card className="lg:col-span-2 p-6 bg-gradient-to-br from-sap to-sap-dark text-white anim-fade relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10"/>
+          <div className="absolute right-6 top-6 w-3 h-3 rounded-full bg-gold shadow-gold"/>
           <div className="relative">
             <div className="flex items-center justify-between">
               <div><div className="text-white/70 text-sm">Horas de servicio social acumuladas</div><div className="text-5xl font-extrabold mt-1">142<span className="text-2xl">h</span></div></div>
-              <span className="w-14 h-14 rounded-2xl bg-white/15 grid place-items-center">{React.cloneElement(Ic.fire,{s:28})}</span>
+              <span className="w-14 h-14 rounded-2xl bg-gold text-ink grid place-items-center shadow-gold">{React.cloneElement(Ic.fire,{s:28})}</span>
             </div>
             <div className="mt-6">
-              <div className="flex justify-between text-sm text-white/80 mb-2"><span>Próxima meta: Beca parcial (150h)</span><span>95%</span></div>
-              <div className="h-3 rounded-full bg-white/20 overflow-hidden"><div className="h-full bg-white rounded-full" style={{width:'95%'}}/></div>
+              <div className="flex justify-between text-sm text-white/80 mb-2"><span>Próxima meta: Beca institucional (150h)</span><span>95%</span></div>
+              <div className="h-3 rounded-full bg-white/20 overflow-hidden"><div className="h-full bg-gold rounded-full" style={{width:'95%'}}/></div>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-6">
-              {[['2.840','Puntos'],['64','Estudiantes'],['#3','Ranking facultad']].map(([a,b])=>(
+              {[['2.840','Puntos'],['64','Ahijados'],['#3','Ranking facultad']].map(([a,b])=>(
                 <div key={b}><div className="text-2xl font-extrabold">{a}</div><div className="text-white/70 text-xs">{b}</div></div>
               ))}
             </div>
           </div>
         </Card>
         <Card className="p-6 anim-fade">
-          <h3 className="font-bold mb-4">Tu racha</h3>
+          <h3 className="font-bold mb-4">Tu racha 🔥</h3>
           <div className="text-center py-2">
-            <div className="text-5xl font-extrabold text-sap flex items-center justify-center gap-2">{React.cloneElement(Ic.fire,{s:36,c:'#0A6ED1'})}30</div>
-            <div className="text-muted text-sm mt-1">días ayudando seguidos</div>
+            <div className="text-5xl font-extrabold text-sap flex items-center justify-center gap-2">{React.cloneElement(Ic.fire,{s:36,c:'#F5B82E'})}30</div>
+            <div className="text-muted text-sm mt-1">días seguidos ayudando</div>
           </div>
-          <div className="flex justify-between gap-1 mt-4">{Array.from({length:7}).map((_,i)=><span key={i} className={cx('flex-1 h-9 rounded-lg grid place-items-center text-xs font-bold', i<6?'bg-sap-light text-sap':'bg-bg text-muted')}>{['L','M','M','J','V','S','D'][i]}</span>)}</div>
+          <div className="flex justify-between gap-1 mt-4">{Array.from({length:7}).map((_,i)=><span key={i} className={cx('flex-1 h-9 rounded-lg grid place-items-center text-xs font-bold', i<6?'bg-gold-light text-gold-dark':'bg-bg text-muted')}>{['L','M','M','J','V','S','D'][i]}</span>)}</div>
         </Card>
       </div>
       <Card className="p-6 anim-fade">
         <h3 className="font-bold mb-4">Recompensas</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           {REWARDS.map(r=>(
-            <div key={r.id} className={cx('rounded-xl border p-4 flex gap-4 tx', r.done?'border-emerald-200 bg-emerald-50/50':'border-line')}>
-              <span className={cx('w-12 h-12 rounded-xl grid place-items-center shrink-0', r.done?'bg-emerald-500 text-white':'bg-sap-light text-sap')}>{React.cloneElement(r.ic,{s:22})}</span>
+            <div key={r.id} className={cx('rounded-xl border p-4 flex gap-4 tx', r.done?'border-emerald-200 bg-emerald-50/50':r.gold?'border-gold/40 bg-gold-soft':'border-line')}>
+              <span className={cx('w-12 h-12 rounded-xl grid place-items-center shrink-0', r.done?'bg-emerald-500 text-white':r.gold?'bg-gold text-ink shadow-gold':'bg-sap-light text-sap')}>{React.cloneElement(r.ic,{s:22})}</span>
               <div className="flex-1">
-                <div className="flex items-center justify-between gap-2"><div className="font-bold text-sm">{r.t}</div>{r.done?<Pill color="green">Desbloqueado</Pill>:<Pill color="gray">{r.need}h</Pill>}</div>
+                <div className="flex items-center justify-between gap-2"><div className="font-bold text-sm">{r.t}</div>{r.done?<Pill color="green">Desbloqueado</Pill>:r.gold?<Pill color="gold">{r.need}h</Pill>:<Pill color="gray">{r.need}h</Pill>}</div>
                 <div className="text-xs text-muted mt-.5">{r.d}</div>
-                {!r.done && <div className="mt-2"><Progress v={142} max={r.need}/></div>}
+                {!r.done && <div className="mt-2"><Progress v={142} max={r.need} color={r.gold?'bg-gold':'bg-sap'}/></div>}
               </div>
             </div>
           ))}
@@ -911,35 +1131,39 @@ function Incentives() {
 /* ----------------------------- History ----------------------------- */
 function History() {
   const { sessions } = useApp();
+  const [view, setView] = useState(null);
   const all = [...sessions, ...SESSIONS0];
   return (
     <>
-      <PageHead title="Historial de mentorías" sub="Todas tus sesiones de acompañamiento." action={<Btn variant="outline">{Ic.cal} Filtrar</Btn>}/>
+      <PageHead title="Mis sesiones" sub="Todo el camino que has hecho con tus padrinos." action={<Btn variant="outline">{Ic.cal} Filtrar</Btn>}/>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Stat ic={Ic.check} label="Sesiones totales" value={all.length}/>
         <Stat ic={Ic.clock} label="Tiempo total" value="142h"/>
-        <Stat ic={Ic.star} label="Rating promedio" value="4.9"/>
-        <Stat ic={Ic.user} label="Estudiantes únicos" value="48"/>
+        <Stat ic={Ic.star} label="Rating promedio" value="4.9" accent="gold"/>
+        <Stat ic={Ic.user} label="Padrinos únicos" value="6"/>
       </div>
       <Card className="anim-fade overflow-x-auto">
-        <table className="w-full text-sm min-w-[640px]">
+        <table className="w-full text-sm min-w-[760px]">
           <thead className="bg-bg text-muted text-xs uppercase"><tr>
-            {['Estudiante','Materia','Fecha','Duración','Valoración','Estado'].map(h=><th key={h} className="text-left font-bold px-5 py-3">{h}</th>)}
+            {['Padrino / Ahijado','Materia','Fecha','Duración','Valoración','Resumen'].map(h=><th key={h} className="text-left font-bold px-5 py-3">{h}</th>)}
           </tr></thead>
           <tbody>
             {all.map((s,idx)=>(
-              <tr key={s.id??idx} className={cx('border-t border-line hover:bg-bg tx', idx<sessions.length && 'bg-sap-soft/40')}>
+              <tr key={s.id??idx} className={cx('border-t border-line hover:bg-bg tx', idx<sessions.length && 'bg-gold-soft')}>
                 <td className="px-5 py-4"><div className="flex items-center gap-3"><Avatar src={AV((idx*7+11)%70)} size={34}/><span className="font-semibold">{s.with}</span></div></td>
                 <td className="px-5 py-4 text-muted">{s.subject}</td>
                 <td className="px-5 py-4 text-muted">{s.date}</td>
                 <td className="px-5 py-4 text-muted">{s.dur}</td>
                 <td className="px-5 py-4"><Stars n={s.rating} s={14}/></td>
-                <td className="px-5 py-4"><Pill color="green">{s.status}</Pill></td>
+                <td className="px-5 py-4">
+                  <Btn variant="soft" className="!py-1.5 !px-3 !text-xs" onClick={()=>setView(s)}>{React.cloneElement(Ic.eye,{s:13})} Ver resumen</Btn>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </Card>
+      {view && <SessionSummaryModal s={view} onClose={()=>setView(null)}/>}
     </>
   );
 }
@@ -953,12 +1177,12 @@ function Availability() {
   const pool = ['Física II','Programación C++','Estadística','Ecuaciones Diferenciales'];
   return (
     <>
-      <PageHead title="Disponibilidad" sub="Controla cuándo recibes solicitudes de mentoría."/>
+      <PageHead title="Disponibilidad" sub="Tú decides cuándo apareces para los ahijados."/>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 p-6 anim-fade">
           <div className="flex items-center justify-between p-4 rounded-xl bg-sap-soft border border-sap/15 mb-6">
-            <div><div className="font-bold">Estado de mentor</div><div className="text-sm text-muted">{on?'Recibiendo solicitudes':'Pausado — no recibes solicitudes'}</div></div>
-            <button onClick={()=>{setOn(!on);toast(!on?'Ahora estás disponible':'Disponibilidad pausada','info');}} className={cx('w-14 h-8 rounded-full tx relative', on?'bg-emerald-500':'bg-gray-300')}>
+            <div><div className="font-bold">¿Estás disponible?</div><div className="text-sm text-muted">{on?'Recibiendo solicitudes':'En modo descanso 🌙'}</div></div>
+            <button onClick={()=>{setOn(!on);toast(!on?'¡A darle! Ya estás disponible':'En pausa, descansa rico','info');}} className={cx('w-14 h-8 rounded-full tx relative', on?'bg-emerald-500':'bg-gray-300')}>
               <span className={cx('absolute top-1 w-6 h-6 rounded-full bg-white tx shadow', on?'left-7':'left-1')}/>
             </button>
           </div>
@@ -973,10 +1197,10 @@ function Availability() {
             <Field label="Desde"><input type="time" defaultValue="16:00" className={inputCls}/></Field>
             <Field label="Hasta"><input type="time" defaultValue="21:00" className={inputCls}/></Field>
           </div>
-          <Btn className="mt-6" onClick={()=>toast('Disponibilidad guardada')}>{Ic.check} Guardar disponibilidad</Btn>
+          <Btn className="mt-6" onClick={()=>toast('Disponibilidad guardada')}>{Ic.check} Guardar</Btn>
         </Card>
         <Card className="p-6 anim-fade h-fit">
-          <h3 className="font-bold mb-3">Materias que enseñas</h3>
+          <h3 className="font-bold mb-3">Materias que dominas</h3>
           <div className="flex flex-wrap gap-2">
             {subjects.map(s=>(
               <button key={s} onClick={()=>setSubjects(x=>x.filter(i=>i!==s))} className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-sap text-white tx">{s}{React.cloneElement(Ic.x,{s:12})}</button>
@@ -990,7 +1214,7 @@ function Availability() {
               ))}
             </div>
           </div>}
-          <div className="mt-6 rounded-xl bg-amber-50 p-4 text-amber-700 text-xs">Mientras más materias y horas, más puntos y recompensas acumulas.</div>
+          <div className="mt-6 rounded-xl bg-gold-light p-4 text-gold-dark text-xs font-bold">Mientras más materias y horas, más puntos y recompensas 🏆</div>
         </Card>
       </div>
     </>
@@ -1003,11 +1227,11 @@ function Settings() {
   const me = role==='student' ? {n:'Juan Pérez',c:'Ing. de Sistemas — 2º semestre',img:AV(60)} : {n:'Valentina Rojas',c:'Ing. de Sistemas — 8º semestre',img:AV(47)};
   return (
     <>
-      <PageHead title="Configuración de perfil" sub="Administra tu información y preferencias."/>
+      <PageHead title="Ajustes de perfil" sub="Tus datos y tus preferencias."/>
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 p-6 anim-fade space-y-4">
           <div className="flex flex-wrap items-center gap-4 pb-5 border-b border-line">
-            <Avatar src={me.img} size={72}/>
+            <Avatar src={me.img} size={72} verified={role==='mentor'}/>
             <div><div className="font-bold">{me.n}</div><div className="text-sm text-muted">{me.c}</div></div>
             <Btn variant="outline" className="ml-auto" onClick={()=>toast('Función de foto disponible en producción','info')}>Cambiar foto</Btn>
           </div>
@@ -1017,8 +1241,8 @@ function Settings() {
             <Field label="Carrera"><input className={inputCls} defaultValue="Ingeniería de Sistemas"/></Field>
             <Field label="Semestre"><input className={inputCls} defaultValue={role==='student'?'2':'8'}/></Field>
           </div>
-          <Field label="Sobre mí"><textarea rows="3" className={inputCls} defaultValue="Apasionado por aprender y ayudar a otros a lograr su mejor versión académica."/></Field>
-          <Btn onClick={()=>toast('Cambios guardados correctamente')}>{Ic.check} Guardar cambios</Btn>
+          <Field label="Sobre mí"><textarea rows="3" className={inputCls} defaultValue="Apasionado por aprender y ayudar a otros a lograr su mejor versión."/></Field>
+          <Btn onClick={()=>toast('Cambios guardados')}>{Ic.check} Guardar</Btn>
         </Card>
         <Card className="p-6 anim-fade h-fit">
           <h3 className="font-bold mb-4">Preferencias</h3>
