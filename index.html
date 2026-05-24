@@ -93,6 +93,10 @@ const Ic = {
   flag:<I d={<><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></>}/>,
   shield:<I d={<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>}/>,
   eye:<I d={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}/>,
+  folder:<I d={<><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></>}/>,
+  folderPlus:<I d={<><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></>}/>,
+  upload:<I d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></>}/>,
+  download:<I d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></>}/>,
 };
 
 /* ----------------------------- Mock Data ----------------------------- */
@@ -277,6 +281,25 @@ const api = {
     if (USE_REAL_API) return http('/me',{method:'PUT',body:JSON.stringify(payload)});
     await sleep(250); return { ok:true };
   },
+
+  // ── Materiales (Teams-style) ─────────────────────────────
+  async getMaterials(){
+    if (USE_REAL_API) return http('/me/materials');
+    await sleep(200);
+    // En producción el backend agrupará por materia; aquí lo arma la UI.
+    return { folders:[], files:[] };
+  },
+  async uploadMaterial({ file, folder }){
+    if (USE_REAL_API){
+      const fd = new FormData(); fd.append('file',file); fd.append('folder',folder);
+      return fetch(`${API_BASE}/me/materials`,{method:'POST',body:fd,credentials:'include'}).then(r=>r.json());
+    }
+    await sleep(450); return { id:Date.now(), name:file?.name||'archivo', folder, size:file?.size||0, url:file?URL.createObjectURL(file):null };
+  },
+  async createFolder(name){
+    if (USE_REAL_API) return http('/me/materials/folders',{method:'POST',body:JSON.stringify({name})});
+    await sleep(250); return { id:Date.now(), name, files:[] };
+  },
 };
 
 /* ----------------------------- UI Primitives ----------------------------- */
@@ -425,11 +448,13 @@ function Shell({ children }) {
   useEffect(()=>{ setOpen(false); },[screen]);
   const navStudent = [
     ['dash','Inicio',Ic.grid],['request','Pedir padrino',Ic.plus],['matching','Padrinos',Ic.spark],
-    ['chat','Mensajes',Ic.chat],['history','Mis sesiones',Ic.clock],['profile','Mi perfil',Ic.user],['settings','Ajustes',Ic.cog]
+    ['chat','Mensajes',Ic.chat],['materials','Mis materiales',Ic.folder],['history','Mis sesiones',Ic.clock],
+    ['profile','Mi perfil',Ic.user],['settings','Ajustes',Ic.cog]
   ];
   const navMentor = [
     ['mdash','Inicio',Ic.grid],['mrequests','Ahijados',Ic.inbox],['chat','Mensajes',Ic.chat],
-    ['incentives','Mis logros',Ic.trophy],['history','Historial',Ic.clock],['availability','Disponibilidad',Ic.cal],['settings','Ajustes',Ic.cog]
+    ['materials','Materiales',Ic.folder],['incentives','Mis logros',Ic.trophy],['history','Historial',Ic.clock],
+    ['availability','Disponibilidad',Ic.cal],['settings','Ajustes',Ic.cog]
   ];
   const nav = role==='student'?navStudent:navMentor;
   const me = role==='student'
@@ -1395,6 +1420,133 @@ function Toggle({def}) {
   return <button onClick={()=>setOn(!on)} className={cx('w-12 h-7 rounded-full tx relative', on?'bg-sap':'bg-gray-300')}><span className={cx('absolute top-1 w-5 h-5 rounded-full bg-white tx shadow', on?'left-6':'left-1')}/></button>;
 }
 
+/* ----------------------------- Materials (Teams-style) ----------------------------- */
+function Materials() {
+  const { sessions, toast } = useApp();
+  const [folderKey, setFolderKey] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef();
+
+  // Carpetas dinámicas: una por materia, con los recursos compartidos en sus sesiones.
+  const allSessions = [...sessions, ...SESSIONS0];
+  const folderMap = {};
+  allSessions.forEach(s => {
+    if (!folderMap[s.subject]) folderMap[s.subject] = { name: s.subject, files: [], updated: s.date };
+    (s.resources || []).forEach(r => {
+      folderMap[s.subject].files.push({ name: r, from: s.with, date: s.date, materia: s.subject });
+    });
+  });
+  // Carpetas extra (vacías) — tipo Teams "Class Materials"
+  if (!folderMap['Mis apuntes']) folderMap['Mis apuntes'] = { name:'Mis apuntes', files:[], updated:'—' };
+  if (!folderMap['Compartidos por padrinos']) folderMap['Compartidos por padrinos'] = { name:'Compartidos por padrinos', files:[], updated:'—' };
+  const folders = Object.values(folderMap);
+  const recent = folders.flatMap(f=>f.files).slice(0,6);
+  const totalFiles = folders.reduce((a,f)=>a+f.files.length,0);
+
+  const onUpload = async (e) => {
+    const file = e.target.files?.[0]; if(!file) return;
+    setUploading(true);
+    try {
+      await api.uploadMaterial({ file, folder: folderKey || 'Mis apuntes' });
+      toast(`"${file.name}" guardado en ${folderKey||'Mis apuntes'}`);
+    } catch { toast('No pudimos subir el archivo','error'); }
+    finally { setUploading(false); e.target.value=''; }
+  };
+
+  return (
+    <>
+      <input type="file" ref={fileRef} onChange={onUpload} className="hidden"/>
+      {folderKey
+        ? <FolderView folder={folderMap[folderKey]} onBack={()=>setFolderKey(null)} onUpload={()=>fileRef.current.click()} uploading={uploading}/>
+        : <MaterialsHome folders={folders} totalFiles={totalFiles} recent={recent} onOpen={setFolderKey} onUpload={()=>fileRef.current.click()} uploading={uploading}/>}
+    </>
+  );
+}
+
+function MaterialsHome({ folders, totalFiles, recent, onOpen, onUpload, uploading }) {
+  const { toast } = useApp();
+  return (
+    <>
+      <PageHead title="Mis materiales 📚" sub="Todo lo que tu padrino comparte queda guardado aquí, organizado por materia."
+        action={<div className="flex gap-2">
+          <Btn variant="outline" onClick={()=>toast('Pronto podrás crear carpetas propias','info')}>{React.cloneElement(Ic.folderPlus,{s:16})} Nueva carpeta</Btn>
+          <Btn onClick={onUpload} disabled={uploading}>{React.cloneElement(Ic.upload,{s:16})} {uploading?'Subiendo…':'Subir archivo'}</Btn>
+        </div>}/>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Stat ic={Ic.folder} label="Carpetas" value={folders.length}/>
+        <Stat ic={Ic.file} label="Archivos" value={totalFiles}/>
+        <Stat ic={Ic.book} label="Materias con material" value={folders.filter(f=>f.files.length>0).length}/>
+        <Stat ic={Ic.clock} label="Nuevos esta semana" value="+6" sub="↑ 3" accent="gold"/>
+      </div>
+      <h3 className="font-bold mb-3">Carpetas</h3>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+        {folders.map((f,i)=>(
+          <button key={f.name} onClick={()=>onOpen(f.name)} className="p-5 rounded-2xl bg-white border border-line hover:border-sap/40 hover:shadow-card text-left tx anim-fade">
+            <div className={cx('w-12 h-12 rounded-xl grid place-items-center mb-3', i%2?'bg-gold-light text-gold-dark':'bg-sap-light text-sap')}>{React.cloneElement(Ic.folder,{s:22})}</div>
+            <div className="font-bold text-sm">{f.name}</div>
+            <div className="text-xs text-muted mt-1">{f.files.length} {f.files.length===1?'archivo':'archivos'} · {f.updated}</div>
+          </button>
+        ))}
+      </div>
+      <h3 className="font-bold mb-3">Archivos recientes</h3>
+      {recent.length===0
+        ? <Card className="p-12 text-center anim-fade"><div className="text-4xl mb-3">📂</div><div className="font-bold">Aún no tienes archivos</div><p className="text-muted text-sm mt-1">Cuando tu padrino comparta material aparecerá aquí.</p></Card>
+        : <Card className="anim-fade overflow-x-auto"><table className="w-full text-sm min-w-[640px]">
+            <thead className="bg-bg text-muted text-xs uppercase"><tr>
+              {['Archivo','Materia','Compartido por','Fecha','Acciones'].map(h=><th key={h} className="text-left font-bold px-5 py-3">{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {recent.map((f,i)=>(
+                <tr key={i} className="border-t border-line hover:bg-bg tx">
+                  <td className="px-5 py-4 font-semibold">{f.name}</td>
+                  <td className="px-5 py-4 text-muted">{f.materia}</td>
+                  <td className="px-5 py-4 text-muted">{f.from}</td>
+                  <td className="px-5 py-4 text-muted">{f.date}</td>
+                  <td className="px-5 py-4">
+                    <Btn variant="soft" className="!py-1.5 !px-3 !text-xs" onClick={()=>toast('Descargando…','info')}>{React.cloneElement(Ic.download,{s:13})} Descargar</Btn>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table></Card>}
+    </>
+  );
+}
+
+function FolderView({ folder, onBack, onUpload, uploading }) {
+  const { toast } = useApp();
+  return (
+    <>
+      <div className="flex items-center gap-2 text-sm mb-2 anim-fade">
+        <button onClick={onBack} className="text-muted hover:text-sap font-semibold flex items-center gap-1">{React.cloneElement(Ic.back,{s:14})} Mis materiales</button>
+        <span className="text-muted">/</span>
+        <span className="text-ink font-bold">{folder.name}</span>
+      </div>
+      <PageHead title={folder.name} sub={`${folder.files.length} ${folder.files.length===1?'archivo':'archivos'} en esta carpeta`}
+        action={<Btn onClick={onUpload} disabled={uploading}>{React.cloneElement(Ic.upload,{s:16})} {uploading?'Subiendo…':'Subir aquí'}</Btn>}/>
+      {folder.files.length===0
+        ? <Card className="p-16 text-center anim-fade"><div className="text-5xl mb-3">📭</div><div className="font-bold">Esta carpeta está vacía</div><p className="text-muted text-sm mt-1">Sube tu primer archivo o espera a que tu padrino comparta material.</p></Card>
+        : <Card className="anim-fade overflow-x-auto"><table className="w-full text-sm min-w-[640px]">
+            <thead className="bg-bg text-muted text-xs uppercase"><tr>
+              {['Archivo','Compartido por','Fecha','Acciones'].map(h=><th key={h} className="text-left font-bold px-5 py-3">{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {folder.files.map((f,i)=>(
+                <tr key={i} className="border-t border-line hover:bg-bg tx">
+                  <td className="px-5 py-4 font-semibold">{f.name}</td>
+                  <td className="px-5 py-4 text-muted">{f.from}</td>
+                  <td className="px-5 py-4 text-muted">{f.date}</td>
+                  <td className="px-5 py-4">
+                    <Btn variant="soft" className="!py-1.5 !px-3 !text-xs" onClick={()=>toast('Descargando…','info')}>{React.cloneElement(Ic.download,{s:13})} Descargar</Btn>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table></Card>}
+    </>
+  );
+}
+
 /* ----------------------------- Router ----------------------------- */
 function Root() {
   const [auth, setAuth] = useState(false);
@@ -1431,7 +1583,7 @@ function Root() {
   if (!auth) return <App.Provider value={ctx}><Auth/><Toasts items={toasts}/></App.Provider>;
   const screens = {
     dash:<StudentDash/>, request:<RequestForm/>, matching:<Matching/>, chat:<Chat/>,
-    history:<History/>, profile:<StudentProfile/>, settings:<Settings/>,
+    history:<History/>, profile:<StudentProfile/>, settings:<Settings/>, materials:<Materials/>,
     mdash:<MentorDash/>, mrequests:<MentorRequests/>, incentives:<Incentives/>, availability:<Availability/>,
   };
   return (

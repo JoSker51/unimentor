@@ -119,6 +119,11 @@ python -m http.server 8000   # luego abre http://localhost:8000
 - **Mis sesiones**: historial completo con botón **"Ver resumen"** que abre
   un detalle por sesión con temas tratados, recursos utilizados, ejercicios
   asignados y notas del padrino.
+- **Mis materiales** (estilo Microsoft Teams "Class Materials"): carpetas
+  organizadas por materia que se llenan automáticamente con los recursos
+  compartidos en cada sesión, más una carpeta "Mis apuntes" para subir
+  archivos propios. Vista de carpeta con tabla de archivos, breadcrumb,
+  acciones de descarga y archivos recientes.
 - **Mi perfil** con progreso por materia.
 
 ### Rol Padrino (estudiante avanzado)
