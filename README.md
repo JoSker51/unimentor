@@ -74,55 +74,79 @@ python -m http.server 8000   # luego abre http://localhost:8000
 
 ## 2. Cómo usar la aplicación
 
-1. En el login, elige un rol: **"Busco ayuda"** (estudiante) o
-   **"Quiero ser mentor"**. Los campos vienen con datos de ejemplo.
-2. Clic en **Iniciar sesión**.
+1. En el login, elige un rol: **"Necesito padrino"** (ahijado / estudiante) o
+   **"Quiero ser padrino"** (mentor). Los campos vienen con datos de ejemplo.
+2. Clic en **Entrar**.
 3. Navega con el **menú de la izquierda** (en tablet/móvil, con el botón ☰).
 
 **Recorrido recomendado para una demo completa:**
 
-1. Entra como **estudiante** → *Solicitar ayuda* → cambia la materia y envía.
-2. Verás la pantalla de **matching** usando esa materia → *Aceptar mentor* →
-   "esperando confirmación" → **¡Match!** → *Abrir chat*.
-3. En el **chat**: escribe un mensaje, **adjunta un archivo**, activa
-   **compartir pantalla**, y pulsa **Finalizar** → califica con estrellas.
-4. La sesión queda **guardada y resaltada** en *Historial*.
-5. *Cerrar sesión* → entra como **mentor** → acepta/rechaza solicitudes,
-   revisa incentivos y disponibilidad.
+1. Entra como **ahijado** → *Pedir padrino* → cambia la materia y envía.
+2. En **matching** usa el botón **👁 Ver perfil** del padrino → revisa las
+   **reseñas estilo Play Store** (resumen 4.9 ★, distribución y comentarios).
+3. *Aceptar padrino* → "tocándole la puerta" → **¡Matchaste!** → *Abrir chat*.
+4. En el **chat**: manda un mensaje, **adjunta un archivo**, activa
+   **compartir pantalla**, prueba el botón **🚩 reportar** (modal de
+   Bienestar con categorías), y pulsa **Finalizar** → califica con estrellas.
+5. La sesión queda **guardada y resaltada** en *Mis sesiones* — pulsa
+   **👁 Ver resumen** para abrir el detalle (temas, recursos, ejercicios,
+   notas del padrino).
+6. *Cerrar sesión* → entra como **padrino** → acepta/rechaza ahijados,
+   revisa logros (con la **beca institucional** resaltada en amarillo) y
+   disponibilidad.
 
 ---
 
 ## 3. Funcionalidades
 
-### Rol Estudiante (busca ayuda)
-- **Dashboard** con métricas, mentores recomendados y próxima sesión.
-- **Formulario de solicitud**: materia, tema, descripción, nivel de
-  urgencia y horario (con validación).
-- **Matching tipo Uber**: búsqueda animada → tarjeta de mentor con foto,
-  semestre, especialidad, rating, tiempo de respuesta y estado online →
-  *Aceptar / Saltar / Ver perfil* → confirmación del mentor → match.
-- **Chat de mentoría**: mensajes en tiempo real, adjuntar archivos,
-  compartir pantalla, cronómetro de sesión, panel lateral (temas tratados,
-  recursos, ejercicios) y modal de **finalizar + valorar**.
-- **Perfil completo del mentor**: carrera, semestre, rating, horas
-  ayudando, logros, incentivos e historial.
-- **Historial** de sesiones y **perfil propio** con progreso por materia.
+> Terminología juguetona: el **mentor** se llama **padrino/padrina** y el
+> estudiante se llama **ahijado/a**, manteniendo un tono cercano y
+> universitario sin perder profesionalismo en formularios y labels.
 
-### Rol Mentor (estudiante avanzado)
-- **Dashboard** con estadísticas, sesión activa y progreso de incentivos.
-- **Solicitudes en tiempo real**: nombre, materia, urgencia, tiempo desde
+### Rol Ahijado (busca padrino)
+- **Dashboard** con métricas, padrinos recomendados y próxima sesión.
+- **Formulario "Pedir padrino"**: materia, tema, descripción, nivel de
+  urgencia y horario (con validación).
+- **Matching tipo Uber**: búsqueda animada → tarjeta de padrino con foto,
+  semestre, especialidad, rating, tiempo de respuesta y estado online →
+  *Aceptar / Saltar / Ver perfil* → confirmación del padrino → match.
+- **Chat de mentoría**: mensajes en tiempo real, adjuntar archivos,
+  compartir pantalla, cronómetro de sesión, panel lateral (temas, recursos,
+  ejercicios), botón de **reporte a Bienestar** y modal de **finalizar + valorar**.
+- **Perfil completo del padrino**: carrera, semestre, rating, horas,
+  logros, historial y **reseñas estilo Play Store** (calificación grande,
+  barras de distribución 5★→1★ y comentarios de ahijados anteriores).
+- **Mis sesiones**: historial completo con botón **"Ver resumen"** que abre
+  un detalle por sesión con temas tratados, recursos utilizados, ejercicios
+  asignados y notas del padrino.
+- **Mi perfil** con progreso por materia.
+
+### Rol Padrino (estudiante avanzado)
+- **Dashboard** con estadísticas, sesión activa y progreso de incentivos
+  (con la beca institucional destacada en amarillo).
+- **Ahijados en tiempo real**: nombre, materia, urgencia, tiempo desde
   la solicitud, con **Aceptar / Rechazar** funcionales.
-- **Sistema de incentivos**: horas de servicio social, puntos, racha,
-  barra de progreso y recompensas desbloqueables (certificados, bonos,
-  beneficios universitarios).
-- **Configurar disponibilidad**: estado, días, franja horaria y materias.
+- **Mis logros**: horas de servicio social, puntos UniMentor, racha
+  diaria, barra de progreso y recompensas desbloqueables (certificados,
+  bonos, acceso VIP, **beca institucional**).
+- **Disponibilidad**: estado, días, franja horaria y materias que dominas.
+
+### Seguridad y bienestar 🛡️
+- **Reportar comportamiento inadecuado** del padrino desde el chat
+  o desde su perfil. Modal con cuatro categorías (conducta sexual
+  inapropiada · lenguaje verbal ofensivo · acoso psicológico · otro),
+  descripción con validación, **reporte anónimo** opcional, ruta directa
+  a Bienestar Universitario y línea de emergencias.
+- **Padrinos verificados** por la institución (sello dorado en avatares,
+  perfil y match).
 
 ### Transversal
-- Login/Register con selección de rol.
+- Login/Register con selección de rol (ahijado / padrino).
 - Notificaciones (toasts) en cada acción.
 - Diseño responsive (desktop y tablet) con sidebar colapsable.
-- Estética SaaS: azul SAP (#0A6ED1), tarjetas limpias, sombras suaves,
-  animaciones, indicadores online.
+- Estética SaaS con paleta institucional: **azul SAP (#0A6ED1)** como
+  primario + **amarillo (#F5B82E) institucional** como acento (sellos
+  verificados, beca, estrellas, racha, identidad de la universidad).
 
 ---
 
@@ -144,6 +168,11 @@ python -m http.server 8000   # luego abre http://localhost:8000
 | **Madurez conceptual y estratégica** | Modelo de dos roles con incentivos (servicio social, puntos, becas) que resuelve el problema real: adaptación universitaria, retención y comunidad colaborativa. |
 | **Madurez técnica** | Arquitectura de componentes con estado global (React Context), enrutado por roles, datos de ejemplo realistas y diseño responsive — todo sin dependencias que instalar. |
 | **Responsive (desktop y tablet)** | Sidebar colapsable con menú ☰ y overlay, grids que se reacomodan, tablas con scroll horizontal y cabeceras que envuelven. |
+| **Seguridad y bienestar del usuario** | Herramienta de reporte con cuatro categorías (sexual, verbal, psicológico, otro), reporte anónimo, ruta a Bienestar Universitario y línea de emergencias — el prototipo no solo simula la función sino que evidencia compromiso con la protección del estudiante. |
+| **Transparencia y confianza (estilo Play Store)** | Perfil del padrino con calificación grande, distribución de estrellas y reseñas de ahijados anteriores, dando contexto real antes de aceptar el match. |
+| **Trazabilidad de la sesión** | Cada sesión guarda y permite consultar después un resumen completo: temas tratados, recursos utilizados, ejercicios asignados y notas del padrino — útil para repasar y para auditoría de la institución. |
+| **Identidad institucional** | Paleta extendida con **amarillo institucional (#F5B82E)** que aparece en logo, sellos de "padrino verificado", beca institucional y rating, manteniendo el azul SAP como primario. |
+| **Tono cercano y comunidad** | Jerga "padrino / ahijado" y copy juvenil ("¡Matchaste!", "Pídele la mano a un padrino") generan pertenencia y bajan la barrera de pedir ayuda — clave para reducir la deserción. |
 
 ---
 
